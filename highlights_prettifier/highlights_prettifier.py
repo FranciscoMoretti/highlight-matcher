@@ -1,29 +1,23 @@
 """Main module."""
-import ebooklib
-from thefuzz import fuzz, process
 import re
 import nltk
 
-nltk.download("punkt")
-
-from nltk import sent_tokenize
-
 from syntax_tree import filter_syntax_tree, walk_up_find
-from highlights_finder import find_highlight_text
 from mdformat.renderer import MDRenderer
 from markdown_it import MarkdownIt
 from rapidfuzz import fuzz, process
 from markdown_it.tree import SyntaxTreeNode
 
+nltk.download("punkt")
 
 # Customize the fuzziness threshold
 FUZZY_MATCH_MIN_SCORE = 90  # Adjust as needed
 
 
-def extract_highlights_from_md(book_text, highlights):
+def extract_highlights_from_md(article_text, highlights):
     mdit = MarkdownIt()
     env = {}
-    tokens = mdit.parse(book_text, env)
+    tokens = mdit.parse(article_text, env)
 
     syntax_tree = SyntaxTreeNode(tokens)
     # Create a dummy root node to hold the filtered nodes
@@ -124,19 +118,19 @@ def get_highlights_from_raw_text(highlights_raw_text):
 
 
 if __name__ == "__main__":
-    book_file_path = "article_sample.md"
+    article_file_path = "article_sample.md"
     output_file = "data/output.md"
     input_file = "highlights_sample.md"
     # Read input from the input.md file
     input_text = ""
-    book_text = ""
+    article_text = ""
     with open(input_file, "r", encoding="utf-8") as file:
         input_text = file.read()
     highlights = get_highlights_from_raw_text(input_text)
-    with open(book_file_path, "r", encoding="utf-8") as file:
-        book_text = file.read()
+    with open(article_file_path, "r", encoding="utf-8") as file:
+        article_text = file.read()
 
-    extracted_md = extract_highlights_from_md(book_text, highlights)
+    extracted_md = extract_highlights_from_md(article_text, highlights)
     save_markdown_to_file(extracted_md, output_file)
 
     print(f"Titles saved to {output_file}")

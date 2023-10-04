@@ -23,12 +23,12 @@ def filter_syntax_tree(node, parent=None):
             parent["children"].remove(node)
 
 
-def find_highlight_text(highlights, book_content):
+def find_highlight_text(highlights, article_content):
     # Initialize the markdown parser
     md = MarkdownIt()
 
     # Parse the article content into an abstract syntax tree (AST)
-    ast = md.parse(book_content)
+    ast = md.parse(article_content)
 
     def traverse_tree(node, highlight_index):
         if node["type"] == "text":
