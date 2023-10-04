@@ -27,7 +27,7 @@ def find_highlight_text(highlights, book_content):
     # Initialize the markdown parser
     md = MarkdownIt()
 
-    # Parse the book content into an abstract syntax tree (AST)
+    # Parse the article content into an abstract syntax tree (AST)
     ast = md.parse(book_content)
 
     def traverse_tree(node, highlight_index):
