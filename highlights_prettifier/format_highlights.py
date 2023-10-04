@@ -1,6 +1,5 @@
 """Main module."""
 import nltk
-from parse_highlights import get_highlights_from_raw_text
 
 from syntax_tree import filter_syntax_tree, walk_up_find
 from mdformat.renderer import MDRenderer
@@ -14,7 +13,7 @@ nltk.download("punkt")
 FUZZY_MATCH_MIN_SCORE = 90  # Adjust as needed
 
 
-def extract_highlights_from_md(article_text, highlights):
+def create_formated_highlights(article_text, highlights):
     mdit = MarkdownIt()
     env = {}
     tokens = mdit.parse(article_text, env)
@@ -56,27 +55,3 @@ def extract_highlights_from_md(article_text, highlights):
     # Ensure that the filtered syntax tree contains only heading nodes
     resulting_markdown = MDRenderer().render(syntax_tree.to_tokens(), mdit.options, env)
     return resulting_markdown
-
-
-def save_markdown_to_file(markdown, output_file):
-    with open(output_file, "w", encoding="utf-8") as f:
-        f.write(markdown)
-
-
-if __name__ == "__main__":
-    article_file_path = "article_sample.md"
-    output_file = "data/output.md"
-    input_file = "highlights_sample.md"
-    # Read input from the input.md file
-    input_text = ""
-    article_text = ""
-    with open(input_file, "r", encoding="utf-8") as file:
-        input_text = file.read()
-    with open(article_file_path, "r", encoding="utf-8") as file:
-        article_text = file.read()
-
-    highlights = get_highlights_from_raw_text(input_text)
-    extracted_md = extract_highlights_from_md(article_text, highlights)
-    save_markdown_to_file(extracted_md, output_file)
-
-    print(f"Titles saved to {output_file}")
