@@ -1,4 +1,6 @@
 """Main module."""
+from ast import parse
+from typing import Self
 import nltk
 
 from highlights_prettifier.syntax_tree_utils import filter_syntax_tree, walk_up_find
@@ -13,13 +15,30 @@ nltk.download("punkt")
 FUZZY_MATCH_MIN_SCORE = 90  # Adjust as needed
 
 
-def create_formated_highlights(article_text, highlights):
-    mdit = MarkdownIt()
-    env = {}
-    tokens = mdit.parse(article_text, env)
+class MakdownParser:
+    """
+    docstring
+    """
 
-    syntax_tree = SyntaxTreeNode(tokens)
+    def __init__(self):
+        self.mdit = MarkdownIt()
+        self.env = {}
+
+    def text_to_syntax_tree(self, text) -> SyntaxTreeNode:
+        tokens = self.mdit.parse(text, self.env)
+        return SyntaxTreeNode(tokens)
+
+    def syntax_tree_to_text(self, syntax_tree):
+        resulting_markdown = MDRenderer().render(
+            syntax_tree.to_tokens(), self.mdit.options, self.env
+        )
+        return resulting_markdown
+
+
+def create_formated_highlights(article_text, highlights):
     # Create a dummy root node to hold the filtered nodes
+    parser = MakdownParser()
+    syntax_tree = parser.text_to_syntax_tree(article_text)
 
     # Define a simple evaluation function to keep heading nodes
     def partially_matches_highlight_or_heading(node: SyntaxTreeNode):
@@ -53,5 +72,5 @@ def create_formated_highlights(article_text, highlights):
         print(f"Removed {num_removed} nodes filter 2")
 
     # Ensure that the filtered syntax tree contains only heading nodes
-    resulting_markdown = MDRenderer().render(syntax_tree.to_tokens(), mdit.options, env)
+    resulting_markdown = parser.syntax_tree_to_text(syntax_tree)
     return resulting_markdown
