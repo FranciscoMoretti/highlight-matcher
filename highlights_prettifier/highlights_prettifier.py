@@ -1,6 +1,6 @@
 """Main module."""
-import re
 import nltk
+from parse_highlights import get_highlights_from_raw_text
 
 from syntax_tree import filter_syntax_tree, walk_up_find
 from mdformat.renderer import MDRenderer
@@ -63,60 +63,6 @@ def save_markdown_to_file(markdown, output_file):
         f.write(markdown)
 
 
-def remove_location_links(highlights):
-    # Define a regex pattern to match the location links at the end of a string
-    pattern = r"\s*\(\[Location\s+\d+\]\(.*?\)\)"
-
-    # Use re.sub to remove the location links from each highlight
-    cleaned_highlights = [re.sub(pattern, "", highlight) for highlight in highlights]
-
-    return cleaned_highlights
-
-
-def remove_trailing_newlines(highlights):
-    # Define a regex pattern to match trailing newline characters
-    pattern = r"\n+$"
-
-    # Use re.sub to remove trailing newlines from each highlight
-    cleaned_highlights = [re.sub(pattern, "", highlight) for highlight in highlights]
-
-    return cleaned_highlights
-
-
-def extract_text_highlights(text):
-    # Split the input text into highlights using regular expressions
-    pattern = r"\(.*?\)\n\n"
-
-    # Use re.findall to find all matches of the pattern in the input text
-    highlights = re.split(pattern, input_text)
-
-    # Remove the location links and leading/trailing whitespace from each match
-    highlights = remove_location_links(highlights)
-    highlights = remove_trailing_newlines(highlights)
-
-    return highlights
-
-
-def get_highlights_from_raw_text(highlights_raw_text):
-    # Remove square brackets and their contents (e.g., [Location 2820])
-    highlights = extract_text_highlights(highlights_raw_text)
-    # sanitized_highlights = re.sub(r"\[.*?\]", "", highlights)
-
-    # # Replace smart quotes with regular quotes
-    # sanitized_highlights = (
-    #     sanitized_highlights.replace("“", '"')
-    #     .replace("”", '"')
-    #     .replace("‘", "'")
-    #     .replace("’", "'")
-    # )
-
-    # Split into paragraphs based on sentences
-    # paragraphs = sent_tokenize(sanitized_highlights)
-
-    # return paragraphs
-    return highlights
-
-
 if __name__ == "__main__":
     article_file_path = "article_sample.md"
     output_file = "data/output.md"
@@ -126,10 +72,10 @@ if __name__ == "__main__":
     article_text = ""
     with open(input_file, "r", encoding="utf-8") as file:
         input_text = file.read()
-    highlights = get_highlights_from_raw_text(input_text)
     with open(article_file_path, "r", encoding="utf-8") as file:
         article_text = file.read()
 
+    highlights = get_highlights_from_raw_text(input_text)
     extracted_md = extract_highlights_from_md(article_text, highlights)
     save_markdown_to_file(extracted_md, output_file)
 
