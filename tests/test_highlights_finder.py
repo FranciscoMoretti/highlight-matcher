@@ -1,4 +1,4 @@
-from ..highlights_prettifier.syntax_tree import filter_syntax_tree, walk_up_find
+from ..highlights_prettifier.syntax_tree_utils import filter_syntax_tree, walk_up_find
 from mdformat.renderer import MDRenderer
 from markdown_it import MarkdownIt
 from rapidfuzz import fuzz, process
