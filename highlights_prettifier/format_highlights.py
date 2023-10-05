@@ -129,15 +129,15 @@ def create_formated_highlights(article_text, highlights):
     def ascendant_is_heading(node: SyntaxTreeNode):
         return walk_up_find(node, lambda node: node.type == "heading")
 
-    while num_removed := status_tree.update_status(
+    num_updated = status_tree.update_status(
         should_update=partially_matches_highlight, new_status=Status.ENABLED
-    ):
-        print(f"Updated {num_removed} nodes filter 1")
+    )
+    print(f"Updated {num_updated} nodes filter 1")
 
-    while num_removed := status_tree.update_status(
+    num_updated = status_tree.update_status(
         should_update=ascendant_is_heading, new_status=Status.ENABLED
-    ):
-        print(f"Updated {num_removed} nodes filter 2")
+    )
+    print(f"Updated {num_updated} nodes filter 2")
 
     while num_removed := status_tree.perform_removals():
         print(f"Remmoved {num_removed} nodes")
