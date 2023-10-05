@@ -118,11 +118,8 @@ def create_formated_highlights(article_text, highlights):
         root_node=syntax_tree, nodes_status_list=node_status_list
     )
 
-    # Define a simple evaluation function to keep heading nodes
-    def partially_matches_highlight_or_heading(node: SyntaxTreeNode):
-        if walk_up_find(node, lambda node: node.type == "heading"):
-            return True
-        elif node.type == "text":
+    def partially_matches_highlight(node: SyntaxTreeNode):
+        if node.type == "text":
             match = process.extractOne(
                 query=node.content, choices=highlights, scorer=fuzz.partial_ratio
             )
@@ -130,13 +127,10 @@ def create_formated_highlights(article_text, highlights):
         return False
 
     def ascendant_is_heading(node: SyntaxTreeNode):
-        for current in node.walk():
-            if walk_up_find(current, lambda node: node.type == "heading"):
-                return True
-        return False
+        return walk_up_find(node, lambda node: node.type == "heading")
 
     while num_removed := status_tree.update_status(
-        should_update=partially_matches_highlight_or_heading, new_status=Status.ENABLED
+        should_update=partially_matches_highlight, new_status=Status.ENABLED
     ):
         print(f"Updated {num_removed} nodes filter 1")
 
