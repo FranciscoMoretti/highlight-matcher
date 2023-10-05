@@ -47,6 +47,7 @@ def get_highlights_from_raw_text(highlights_raw_text):
     #     .replace("‘", "'")
     #     .replace("’", "'")
     # )
+    highlights = [highlight.strip() for highlight in highlights]
 
     # Split into paragraphs based on sentences
     # paragraphs = sent_tokenize(sanitized_highlights)

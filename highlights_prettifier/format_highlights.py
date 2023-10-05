@@ -4,6 +4,7 @@ from uu import Error
 from attr import dataclass
 import nltk
 from dataclasses import dataclass
+from highlight_finder import find_substrings_sequence
 
 from syntax_tree_utils import filter_syntax_tree, walk_up_find
 from mdformat.renderer import MDRenderer
@@ -147,6 +148,21 @@ def create_formated_highlights(article_text, highlights):
     )
 
     node_string_map = NodeStringMap(root_node=syntax_tree)
+
+    highlihgt_matches_positions = list(
+        find_substrings_sequence(node_string_map.string, highlights)
+    )
+
+    print(
+        node_string_map.string[
+            highlihgt_matches_positions[0][0] : highlihgt_matches_positions[0][1]
+        ]
+    )
+    print(
+        node_string_map.string[
+            highlihgt_matches_positions[1][0] : highlihgt_matches_positions[1][1]
+        ]
+    )
 
     def partially_matches_highlight(node: SyntaxTreeNode):
         if node.type == "text":
