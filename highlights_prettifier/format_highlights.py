@@ -54,6 +54,34 @@ class NodeStatus:
 
 
 @dataclass
+class NodeStringConnection:
+    node: SyntaxTreeNode
+    start_pos: int
+    end_pos: int
+
+
+class NodeStringMap:
+    def __init__(self, root_node: SyntaxTreeNode):
+        self.string = ""
+        self.connections = []
+        self._build_map_conections(root_node)
+
+    def _build_map_conections(self, root_node):
+        text_nodes = [node for node in root_node.walk() if node.type == "text"]
+        start_index = 0
+        end_index = 0
+        for node in text_nodes:
+            start_index = len(self.string)
+            end_index = start_index + len(node.content)
+            self.string += node.content + " "
+            self.connections.append(
+                NodeStringConnection(
+                    node=node, start_pos=start_index, end_pos=end_index
+                )
+            )
+
+
+@dataclass
 class NodeStatusTree:
     root_node: SyntaxTreeNode
     nodes_status_list: List[NodeStatus]
@@ -117,6 +145,8 @@ def create_formated_highlights(article_text, highlights):
     status_tree = NodeStatusTree(
         root_node=syntax_tree, nodes_status_list=node_status_list
     )
+
+    node_string_map = NodeStringMap(root_node=syntax_tree)
 
     def partially_matches_highlight(node: SyntaxTreeNode):
         if node.type == "text":
