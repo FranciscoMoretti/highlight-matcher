@@ -28,7 +28,7 @@ def test_no_match():
 
 def test_fuzzy_find_exact_match():
     long_string = "This is an example of fuzzy matching in Python."
-    substrings = ["example   of", "fuzzy matching   in   Python."]
+    substrings = ["example  of", "fuzzy matching  in  Python."]
     result_ranges = list(fuzzy_find_substrings_sequence(long_string, substrings))
     result_string = [
         substring_with_range(long_string, range) for range in result_ranges
@@ -39,12 +39,12 @@ def test_fuzzy_find_exact_match():
 
 def test_fuzzy_find_partial_match():
     long_string = "This is an example of fuzzy matching in Python."
-    substrings = ["example  of  fuzzy. ", "matching- in"]
+    substrings = ["example  of  fuzzy ", "matching- in"]
     result_ranges = list(fuzzy_find_substrings_sequence(long_string, substrings))
     result_string = [
         substring_with_range(long_string, range) for range in result_ranges
     ]
-    expected = ["example of", "fuzzy matching in Python."]
+    expected = ["example of fuzzy", "matching in"]
     assert result_string == expected
 
 

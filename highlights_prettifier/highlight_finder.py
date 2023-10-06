@@ -1,8 +1,8 @@
-from shlex import join
 from typing import List
 from highlights_prettifier.range import Range
 from rapidfuzz import fuzz
-
+from difflib import SequenceMatcher as SM
+from nltk.util import ngrams
 
 FUZZY_MATCH_MIN_SCORE = 90
 
@@ -27,40 +27,37 @@ def tokenize(text):
 
 
 def untokenize(tokens):
-    return " ", join(tokens)
+    return " ".join(tokens)
 
 
+# Algorithm find in https://stackoverflow.com/questions/17740833/checking-fuzzy-approximate-substring-existing-in-a-longer-string-in-python
+# Other alternatives in same question
 def fuzzy_find_substrings_sequence(long_string: str, substrings: List[str]):
-    tokens = tokenize(long_string)
-    substrings_tokens = [tokenize(substring) for substring in substrings]
-
-    substrings_index = 0
     current_start = 0
+    current_hay = long_string
 
     for substring in substrings:
-        alignment = fuzz.partial_ratio_alignment(long_string, substring)
-        if alignment is not None:
-            start_pos = alignment.src_start
-            while long_string[start_pos] == " ":
-                start_pos += 1
-            end_pos = alignment.src_end
-            while long_string[end_pos - 1] == " ":
-                end_pos -= 1
-            yield Range(start_pos=start_pos, end_pos=end_pos)
-        # TODO: else: ERROR?
+        needle_length = len(substring.split())
+        max_sim_val = 0
+        max_sim_string = ""
 
-    # while substrings_index < len(substrings_tokens):
-    #     current_substring_tokens = substrings_tokens[substrings_index]
-
-    #     for i in range(current_start, len(tokens) - len(current_substring_tokens) + 1):
-    #         sub_tokens = tokens[i : i + len(current_substring_tokens)]
-    #         match_ratio = normalized_ratio(
-    #             untokenize(current_substring_tokens), untokenize(sub_tokens)
-    #         )
-
-    #         if match_ratio >= FUZZY_MATCH_MIN_SCORE:
-    #             yield Range(i, i + len(current_substring_tokens) - 1)
-    #             current_start = i + len(current_substring_tokens)
-    #             break
-
-    #     substrings_index += 1
+        for ngram in ngrams(
+            tokenize(current_hay), needle_length + int(0.2 * needle_length)
+        ):
+            hay_ngram = untokenize(ngram)
+            similarity = SM(None, hay_ngram, substring).ratio()
+            if similarity > max_sim_val and similarity > FUZZY_MATCH_MIN_SCORE / 100.0:
+                max_sim_val = similarity
+                max_sim_string = hay_ngram
+        if max_sim_string:
+            # Rematch to find the index with the string extracted from current hay
+            alignment = fuzz.partial_ratio_alignment(
+                current_hay, max_sim_string, score_cutoff=FUZZY_MATCH_MIN_SCORE
+            )
+            if alignment is not None:
+                yield Range(
+                    start_pos=current_start + alignment.src_start,
+                    end_pos=current_start + alignment.src_end,
+                )
+                current_start += alignment.src_end
+                current_hay = long_string[current_start:]
