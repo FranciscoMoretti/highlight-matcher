@@ -62,19 +62,26 @@ class NodeStringConnection:
 
 
 def filter_node_string_connections(
-    node_strings: List[NodeStringConnection], ranges: List[Range]
+    node_connections: List[NodeStringConnection], filter_ranges: List[Range]
 ):
     filtered_list = []
+    node_idx, range_idx = 0, 0  # Index variables for node_connections and filter_ranges
 
-    for node_string in node_strings:
-        for r in ranges:
-            if (
-                node_string.range.start_pos <= r.end_pos
-                and node_string.range.end_pos
-                >= r.start_pos  # TODO: Review the end pose comparison. Should it be > ?
-            ):
-                filtered_list.append(node_string)
-                break  # Break the inner loop if overlap is found
+    while node_idx < len(node_connections) and range_idx < len(filter_ranges):
+        node_connection = node_connections[node_idx]
+        filter_range = filter_ranges[range_idx]
+
+        if node_connection.range.end_pos < filter_range.start_pos:
+            # If node_connection is completed before filter_range, advance node_connection
+            node_idx += 1
+        elif node_connection.range.start_pos > filter_range.end_pos:
+            # If node_connection is completed after filter_range, advance filter_range
+            range_idx += 1
+        else:
+            # If there is an overlap, add node_connection to the filtered list
+
+            filtered_list.append(node_connection)
+            node_idx += 1  # Move to the next node_connection, as ranges do not overlap
 
     return filtered_list
 
@@ -177,7 +184,8 @@ def create_formated_highlights(article_text, highlights):
     # TODO: Overwrite node text with highlight text
     # TODO: Create fuzzy matchings
     matched_nodes = filter_node_string_connections(
-        node_strings=node_strings_map.connections, ranges=highlihgt_matches_positions
+        node_connections=node_strings_map.connections,
+        filter_ranges=highlihgt_matches_positions,
     )
 
     def partially_matches_highlight(node: SyntaxTreeNode):
