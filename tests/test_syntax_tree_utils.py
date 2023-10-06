@@ -2,7 +2,7 @@ import markdown_it
 from markdown_it.tree import SyntaxTreeNode
 from mdformat.renderer import MDRenderer
 
-from ..highlights_prettifier.syntax_tree_utils import filter_syntax_tree
+from highlights_prettifier.syntax_tree_utils import filter_syntax_tree
 
 
 def test_filter_syntax_tree():

@@ -1,4 +1,4 @@
-from ..highlights_prettifier.range import Range, calculate_overlap
+from highlights_prettifier.range import Range, calculate_overlap
 
 
 def test_no_overlap():

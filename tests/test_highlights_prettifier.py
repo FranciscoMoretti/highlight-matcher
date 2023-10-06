@@ -5,9 +5,6 @@
 import pytest
 
 
-from highlights_prettifier import highlights_prettifier
-
-
 @pytest.fixture
 def response():
     """Sample pytest fixture.

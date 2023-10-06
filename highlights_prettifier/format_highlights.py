@@ -186,6 +186,8 @@ def create_formated_highlights(article_text, highlights):
 
     node_strings_map = NodeStringMap(root_node=syntax_tree)
 
+    # TODO: Create fuzzy matchings
+    # TODO: Replace filter functions with matched_nodes
     highlihgt_matches_positions = list(
         find_substrings_sequence(node_strings_map.string, highlights)
     )
@@ -193,8 +195,6 @@ def create_formated_highlights(article_text, highlights):
     for range in highlihgt_matches_positions:
         print(node_strings_map.string[range.start_pos : range.end_pos])
 
-    # TODO: Overwrite node text with highlight text
-    # TODO: Create fuzzy matchings
     matched_nodes = filter_node_string_connections(
         node_connections=node_strings_map.connections,
         filter_ranges=highlihgt_matches_positions,

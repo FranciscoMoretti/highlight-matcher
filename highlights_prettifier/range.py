@@ -26,3 +26,7 @@ def calculate_overlap(range1: Range, range2: Range) -> Optional[Range]:
         return Range(overlap_start, overlap_end)
     else:
         return None
+
+
+def substring_with_range(string: str, range: Range) -> str:
+    return string[range.start_pos : range.end_pos]

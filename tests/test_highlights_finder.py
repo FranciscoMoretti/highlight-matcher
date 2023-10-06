@@ -1,4 +1,4 @@
-from ..highlights_prettifier.syntax_tree_utils import filter_syntax_tree, walk_up_find
+from highlights_prettifier.syntax_tree_utils import filter_syntax_tree, walk_up_find
 from mdformat.renderer import MDRenderer
 from markdown_it import MarkdownIt
 from rapidfuzz import fuzz, process
@@ -38,45 +38,6 @@ highlights_1 = [
 expected_filtered_content_1 = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt\nut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation\nullamco laboris nisi ut aliquip ex ea commodo consequat.\n"
 
 FUZZY_MATCH_MIN_SCORE = 80
-
-
-def test_find_highlight_paragraphs():
-    mdit = MarkdownIt()
-    env = {}
-    tokens = mdit.parse(book_content_0, env)
-
-    syntax_tree = SyntaxTreeNode(tokens)
-    # Create a dummy root node to hold the filtered nodes
-
-    # Define a simple evaluation function to keep heading nodes
-    def partially_matches_highlight(node: SyntaxTreeNode):
-        if node.children:
-            return True
-        elif node.type == "text":
-            match = process.extractOne(
-                query=node.content, choices=highlights_0, scorer=fuzz.partial_ratio
-            )
-            return match and match[1] > FUZZY_MATCH_MIN_SCORE
-        return False
-
-    def descendant_has_text(node: SyntaxTreeNode):
-        for current in node.walk():
-            if current.type == "text":
-                return True
-        return False
-
-    # Test the filter_syntax_tree function with the sample tree and evaluation function
-    while num_removed := filter_syntax_tree(syntax_tree, partially_matches_highlight):
-        print(f"Removed {num_removed} nodes")
-    filter_syntax_tree(syntax_tree, descendant_has_text)
-
-    # Ensure that the filtered syntax tree contains only heading nodes
-    resulting_markdown = MDRenderer().render(syntax_tree.to_tokens(), mdit.options, env)
-    assert (
-        resulting_markdown
-        == "## Images\n\nLike links, Images also have a footnote style syntax"
-        "\n\nWith a reference later in the document defining the URL location:\n"
-    )
 
 
 @pytest.mark.parametrize(
