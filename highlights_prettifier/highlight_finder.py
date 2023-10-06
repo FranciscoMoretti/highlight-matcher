@@ -1,4 +1,4 @@
-from .range import Range
+from range import Range
 
 
 def find_substrings_sequence(long_string, substrings):

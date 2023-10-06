@@ -5,7 +5,7 @@ from attr import dataclass
 import nltk
 from dataclasses import dataclass
 from highlight_finder import find_substrings_sequence
-from range import Range
+from range import Range, calculate_overlap
 
 from syntax_tree_utils import filter_syntax_tree, walk_up_find
 from mdformat.renderer import MDRenderer
@@ -79,11 +79,23 @@ def filter_node_string_connections(
             range_idx += 1
         else:
             # If there is an overlap, add node_connection to the filtered list
-
+            overlap_range = calculate_overlap(node_connection.range, filter_range)
+            _filter_node_text_with_range(node_connection, overlap_range)
             filtered_list.append(node_connection)
             node_idx += 1  # Move to the next node_connection, as ranges do not overlap
 
     return filtered_list
+
+
+def _filter_node_text_with_range(node_connection, overlap_range):
+    overlap_relative_to_node = Range(
+        overlap_range.start_pos - node_connection.range.start_pos,
+        overlap_range.end_pos - node_connection.range.start_pos,
+    )
+    overlap_text = node_connection.node.content[
+        overlap_relative_to_node.start_pos : overlap_relative_to_node.end_pos
+    ]
+    node_connection.node.token.content = overlap_text
 
 
 class NodeStringMap:
