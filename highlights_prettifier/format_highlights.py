@@ -63,7 +63,7 @@ class NodeStringConnection:
 
 def filter_node_string_connections(
     node_connections: List[NodeStringConnection], filter_ranges: List[Range]
-):
+) -> List[NodeStringConnection]:
     filtered_list = []
     node_idx, range_idx = 0, 0  # Index variables for node_connections and filter_ranges
 
@@ -186,7 +186,6 @@ def create_formated_highlights(article_text, highlights):
 
     node_strings_map = NodeStringMap(root_node=syntax_tree)
 
-    # TODO: Create fuzzy matchings
     # TODO: Replace filter functions with matched_nodes
     highlihgt_matches_positions = list(
         find_substrings_sequence(node_strings_map.string, highlights)
@@ -195,24 +194,20 @@ def create_formated_highlights(article_text, highlights):
     for range in highlihgt_matches_positions:
         print(node_strings_map.string[range.start_pos : range.end_pos])
 
-    matched_nodes = filter_node_string_connections(
+    matched_node_conections = filter_node_string_connections(
         node_connections=node_strings_map.connections,
         filter_ranges=highlihgt_matches_positions,
     )
-
-    def partially_matches_highlight(node: SyntaxTreeNode):
-        if node.type == "text":
-            match = process.extractOne(
-                query=node.content, choices=highlights, scorer=fuzz.partial_ratio
-            )
-            return match and match[1] > FUZZY_MATCH_MIN_SCORE
-        return False
+    matched_nodes = [
+        node_connection.node for node_connection in matched_node_conections
+    ]
 
     def ascendant_is_heading(node: SyntaxTreeNode):
         return walk_up_find(node, lambda node: node.type == "heading")
 
     num_updated = status_tree.update_status(
-        should_update=partially_matches_highlight, new_status=Status.ENABLED
+        should_update=lambda node: node in matched_nodes,
+        new_status=Status.ENABLED,
     )
     print(f"Updated {num_updated} nodes filter 1")
 
@@ -227,3 +222,11 @@ def create_formated_highlights(article_text, highlights):
     # Ensure that the filtered syntax tree contains only heading nodes
     resulting_markdown = parser.syntax_tree_to_text(syntax_tree)
     return resulting_markdown
+
+    # def partially_matches_highlight(node: SyntaxTreeNode):
+    #     if node.type == "text":
+    #         match = process.extractOne(
+    #             query=node.content, choices=highlights, scorer=fuzz.partial_ratio
+    #         )
+    #         return match and match[1] > FUZZY_MATCH_MIN_SCORE
+    #     return False
