@@ -1,3 +1,6 @@
+from range import Range
+
+
 def find_substrings_sequence(long_string, substrings):
     start = 0
     for substring in substrings:
@@ -6,5 +9,5 @@ def find_substrings_sequence(long_string, substrings):
             # If the substring is not found, stop the generator
             break
         end_pos = start_pos + len(substring)
-        yield start_pos, end_pos
+        yield Range(start_pos, end_pos)
         start = end_pos + 1

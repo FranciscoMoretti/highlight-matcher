@@ -5,6 +5,7 @@ from attr import dataclass
 import nltk
 from dataclasses import dataclass
 from highlight_finder import find_substrings_sequence
+from range import Range
 
 from syntax_tree_utils import filter_syntax_tree, walk_up_find
 from mdformat.renderer import MDRenderer
@@ -57,8 +58,25 @@ class NodeStatus:
 @dataclass
 class NodeStringConnection:
     node: SyntaxTreeNode
-    start_pos: int
-    end_pos: int
+    range: Range
+
+
+def filter_node_string_connections(
+    node_strings: List[NodeStringConnection], ranges: List[Range]
+):
+    filtered_list = []
+
+    for node_string in node_strings:
+        for r in ranges:
+            if (
+                node_string.range.start_pos <= r.end_pos
+                and node_string.range.end_pos
+                >= r.start_pos  # TODO: Review the end pose comparison. Should it be > ?
+            ):
+                filtered_list.append(node_string)
+                break  # Break the inner loop if overlap is found
+
+    return filtered_list
 
 
 class NodeStringMap:
@@ -77,7 +95,7 @@ class NodeStringMap:
             self.string += node.content + " "
             self.connections.append(
                 NodeStringConnection(
-                    node=node, start_pos=start_index, end_pos=end_index
+                    node=node, range=Range(start_pos=start_index, end_pos=end_index)
                 )
             )
 
@@ -147,21 +165,19 @@ def create_formated_highlights(article_text, highlights):
         root_node=syntax_tree, nodes_status_list=node_status_list
     )
 
-    node_string_map = NodeStringMap(root_node=syntax_tree)
+    node_strings_map = NodeStringMap(root_node=syntax_tree)
 
     highlihgt_matches_positions = list(
-        find_substrings_sequence(node_string_map.string, highlights)
+        find_substrings_sequence(node_strings_map.string, highlights)
     )
 
-    print(
-        node_string_map.string[
-            highlihgt_matches_positions[0][0] : highlihgt_matches_positions[0][1]
-        ]
-    )
-    print(
-        node_string_map.string[
-            highlihgt_matches_positions[1][0] : highlihgt_matches_positions[1][1]
-        ]
+    for range in highlihgt_matches_positions:
+        print(node_strings_map.string[range.start_pos : range.end_pos])
+
+    # TODO: Overwrite node text with highlight text
+    # TODO: Create fuzzy matchings
+    matched_nodes = filter_node_string_connections(
+        node_strings=node_strings_map.connections, ranges=highlihgt_matches_positions
     )
 
     def partially_matches_highlight(node: SyntaxTreeNode):
