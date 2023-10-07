@@ -1,10 +1,11 @@
 from typing import List
-from highlights_prettifier.range import Range
+from highlights_prettifier.range import Range, extend_substring_range
 from rapidfuzz import fuzz
 from difflib import SequenceMatcher as SM
 from nltk.util import ngrams
 
 FUZZY_MATCH_MIN_SCORE = 90
+FUZZY_APROXIMATION_MIN_SCORE = 80
 
 
 def find_substrings_sequence(long_string: str, substrings: List[str]):
@@ -19,14 +20,14 @@ def find_substrings_sequence(long_string: str, substrings: List[str]):
         start = end_pos + 1
 
 
-def tokenize(text):
+def tokenize_from_text(text):
     # Tokenize the input string into words (tokens)
     # TODO: This operation is not safe for multiple whitespaces because it doesn't count
     # them and then it joins them with a single whitespace
     return text.split()
 
 
-def untokenize(tokens):
+def untokenize_to_text(tokens):
     return " ".join(tokens)
 
 
@@ -37,27 +38,56 @@ def fuzzy_find_substrings_sequence(long_string: str, substrings: List[str]):
     current_hay = long_string
 
     for substring in substrings:
-        needle_length = len(substring.split())
-        max_sim_val = 0
-        max_sim_string = ""
+        first_alignment = fuzz.partial_ratio_alignment(
+            current_hay, substring, score_cutoff=FUZZY_APROXIMATION_MIN_SCORE
+        )
+        if first_alignment is None:
+            # TODO: Fail if no initial alignment
+            return
 
-        for ngram in ngrams(
-            tokenize(current_hay), needle_length + int(0.2 * needle_length)
-        ):
-            hay_ngram = untokenize(ngram)
-            similarity = SM(None, hay_ngram, substring).ratio()
-            if similarity > max_sim_val and similarity > FUZZY_MATCH_MIN_SCORE / 100.0:
-                max_sim_val = similarity
-                max_sim_string = hay_ngram
-        if max_sim_string:
-            # Rematch to find the index with the string extracted from current hay
-            alignment = fuzz.partial_ratio_alignment(
-                current_hay, max_sim_string, score_cutoff=FUZZY_MATCH_MIN_SCORE
+        # TODO: Extend with range
+        smaller_hay = _get_smaller_hay_around_alignment(current_hay, first_alignment)
+        max_sim_string = refine_match(smaller_hay, substring)
+        if not max_sim_string:
+            # TODO: Fail if not max_sim_string
+            return
+        # Rematch to find the index with the string extracted from current hay
+        alignment = fuzz.partial_ratio_alignment(
+            current_hay, max_sim_string, score_cutoff=FUZZY_MATCH_MIN_SCORE
+        )
+        if alignment is not None:
+            yield Range(
+                start_pos=current_start + alignment.src_start,
+                end_pos=current_start + alignment.src_end,
             )
-            if alignment is not None:
-                yield Range(
-                    start_pos=current_start + alignment.src_start,
-                    end_pos=current_start + alignment.src_end,
-                )
-                current_start += alignment.src_end
-                current_hay = long_string[current_start:]
+            current_start += alignment.src_end
+            current_hay = long_string[current_start:]
+
+
+def _get_smaller_hay_around_alignment(current_hay: str, first_alignment):
+    extended_range = extend_substring_range(
+        complete_string_len=len(current_hay),
+        substring_range=Range(first_alignment.src_start, first_alignment.src_end),
+        extension_length=int(
+            0.2 * (first_alignment.src_end - first_alignment.src_start) + 10
+        ),
+    )
+    smaller_hay = current_hay[extended_range.start_pos : extended_range.end_pos]
+
+    return smaller_hay
+
+
+def refine_match(current_hay, substring):
+    needle_length = len(substring.split())
+    max_sim_val = 0
+    max_sim_string = ""
+    hay_tokens = tokenize_from_text(current_hay)
+
+    # Todo consider less grams length
+    for ngram in ngrams(hay_tokens, min(needle_length, len(hay_tokens))):
+        hay_ngram = untokenize_to_text(ngram)
+        similarity = SM(None, hay_ngram, substring).ratio()
+        if similarity > max_sim_val and similarity > FUZZY_MATCH_MIN_SCORE / 100.0:
+            max_sim_val = similarity
+            max_sim_string = hay_ngram
+    return max_sim_string

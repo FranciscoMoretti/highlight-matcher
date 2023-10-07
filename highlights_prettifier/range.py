@@ -30,3 +30,12 @@ def calculate_overlap(range1: Range, range2: Range) -> Optional[Range]:
 
 def substring_with_range(string: str, range: Range) -> str:
     return string[range.start_pos : range.end_pos]
+
+
+def extend_substring_range(
+    complete_string_len: int, substring_range: Range, extension_length: int = 10
+):
+    start_pos = max(substring_range.start_pos - extension_length, 0)
+    end_pos = min(substring_range.end_pos + extension_length, complete_string_len)
+
+    return Range(start_pos, end_pos)

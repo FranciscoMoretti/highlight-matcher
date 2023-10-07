@@ -9,9 +9,9 @@ def save_markdown_to_file(markdown, output_file):
 
 
 if __name__ == "__main__":
-    article_file_path = "article_sample.md"
+    article_file_path = "data/markdown_ebook.md"
     output_file = "data/output.md"
-    input_file = "highlights_sample.md"
+    input_file = "data/input_small.md"
     # Read input from the input.md file
     input_text = ""
     article_text = ""

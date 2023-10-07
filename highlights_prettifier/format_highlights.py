@@ -4,7 +4,7 @@ from uu import Error
 from attr import dataclass
 import nltk
 from dataclasses import dataclass
-from highlight_finder import find_substrings_sequence
+from highlight_finder import find_substrings_sequence, fuzzy_find_substrings_sequence
 from range import Range, calculate_overlap
 
 from syntax_tree_utils import filter_syntax_tree, walk_up_find
@@ -188,7 +188,7 @@ def create_formated_highlights(article_text, highlights):
 
     # TODO: Replace filter functions with matched_nodes
     highlihgt_matches_positions = list(
-        find_substrings_sequence(node_strings_map.string, highlights)
+        fuzzy_find_substrings_sequence(node_strings_map.string, highlights)
     )
 
     for range in highlihgt_matches_positions:
