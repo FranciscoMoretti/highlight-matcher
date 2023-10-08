@@ -1,7 +1,9 @@
+import difflib
+import re
 from typing import List
+from uu import Error
 from highlights_prettifier.range import Range, extend_substring_range
-from rapidfuzz import fuzz
-from difflib import SequenceMatcher as SM
+from rapidfuzz import fuzz, process, utils
 from nltk.util import ngrams
 
 FUZZY_MATCH_MIN_SCORE = 90
@@ -31,9 +33,9 @@ def untokenize_to_text(tokens):
     return " ".join(tokens)
 
 
-# Algorithm find in https://stackoverflow.com/questions/17740833/checking-fuzzy-approximate-substring-existing-in-a-longer-string-in-python
-# Other alternatives in same question
-def fuzzy_find_substrings_sequence(long_string: str, substrings: List[str]):
+def fuzzy_find_substrings_sequence(
+    long_string: str, substrings: List[str], raiseErrors=False
+):
     current_start = 0
     current_hay = long_string
 
@@ -43,14 +45,20 @@ def fuzzy_find_substrings_sequence(long_string: str, substrings: List[str]):
         )
         if first_alignment is None:
             # TODO: Fail if no initial alignment
-            return
-
+            if raiseErrors:
+                raise Error("First alignment failed")
+            else:
+                continue
         # TODO: Extend with range
         smaller_hay = _get_smaller_hay_around_alignment(current_hay, first_alignment)
-        max_sim_string = refine_match(smaller_hay, substring)
+        max_sim_string = refine_matching_sequences(smaller_hay, substring)
         if not max_sim_string:
-            # TODO: Fail if not max_sim_string
-            return
+            max_sim_string = refine_matching_tokens(smaller_hay, substring)
+        if not max_sim_string:
+            if raiseErrors:
+                raise Error("Match Refinement Failed but basic alignment worked")
+            else:
+                continue
         # Rematch to find the index with the string extracted from current hay
         alignment = fuzz.partial_ratio_alignment(
             current_hay, max_sim_string, score_cutoff=FUZZY_MATCH_MIN_SCORE
@@ -77,7 +85,7 @@ def _get_smaller_hay_around_alignment(current_hay: str, first_alignment):
     return smaller_hay
 
 
-def refine_match(current_hay, substring):
+def refine_matching_tokens(current_hay, substring):
     needle_length = len(substring.split())
     max_sim_val = 0
     max_sim_string = ""
@@ -86,8 +94,29 @@ def refine_match(current_hay, substring):
     # Todo consider less grams length
     for ngram in ngrams(hay_tokens, min(needle_length, len(hay_tokens))):
         hay_ngram = untokenize_to_text(ngram)
-        similarity = SM(None, hay_ngram, substring).ratio()
-        if similarity > max_sim_val and similarity > FUZZY_MATCH_MIN_SCORE / 100.0:
+        # similarity = SM(None, hay_ngram, substring).ratio()
+        similarity = fuzz.token_ratio(hay_ngram, substring)
+        if similarity > max_sim_val and similarity > FUZZY_MATCH_MIN_SCORE:
             max_sim_val = similarity
             max_sim_string = hay_ngram
     return max_sim_string
+
+
+def preprocess(seq):
+    return utils.default_process(str(seq))
+
+
+def refine_matching_sequences(hay, needle):
+    # Tokenize the input strings
+    matcher = difflib.SequenceMatcher(None, hay, needle)
+    match_ranges_raw = matcher.get_matching_blocks()
+    match_ranges = match_ranges_raw[:-1]  # Remove dummy last triple
+
+    if len(match_ranges) == 0:
+        return ""
+
+    hay_end = match_ranges[-1].a + match_ranges[-1].size
+    hay_start = match_ranges[0].a
+    result = hay[hay_start:hay_end]
+
+    return result

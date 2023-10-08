@@ -136,9 +136,6 @@ class NodeStatusTree:
                     num_updated += 1
         return num_updated
 
-    def _find_node_status_of_node(self, current):
-        return next((el for el in self.nodes_status_list if el.node == current))
-
     def perform_removals(self) -> int:
         self._mark_ascendants_as_enabled()
         nodes_to_remove = list(
@@ -154,6 +151,19 @@ class NodeStatusTree:
             else:
                 raise Error("Attempted to remove node without parent")
         return len(nodes_to_remove)
+
+    def find_nodes_with_content(self, content: str):
+        return list(
+            filter(
+                lambda node_status: content in node_status.node.content
+                if hasattr(node_status.node, "content")
+                else False,
+                list(self.nodes_status_list),
+            )
+        )
+
+    def _find_node_status_of_node(self, current):
+        return next((el for el in self.nodes_status_list if el.node == current))
 
     def _mark_ascendants_as_enabled(self):
         enabled_node_statuses = [
@@ -202,6 +212,8 @@ def create_formated_highlights(article_text, highlights):
         node_connection.node for node_connection in matched_node_conections
     ]
 
+    findings = status_tree.find_nodes_with_content("we claim that using")
+
     def ascendant_is_heading(node: SyntaxTreeNode):
         return walk_up_find(node, lambda node: node.type == "heading")
 
@@ -209,15 +221,20 @@ def create_formated_highlights(article_text, highlights):
         should_update=lambda node: node in matched_nodes,
         new_status=Status.ENABLED,
     )
+    findings = status_tree.find_nodes_with_content("we claim that using")
+
     print(f"Updated {num_updated} nodes filter 1")
 
     num_updated = status_tree.update_status(
         should_update=ascendant_is_heading, new_status=Status.ENABLED
     )
+    findings = status_tree.find_nodes_with_content("we claim that using")
     print(f"Updated {num_updated} nodes filter 2")
 
     while num_removed := status_tree.perform_removals():
         print(f"Remmoved {num_removed} nodes")
+    # TODO: Removal doesn't remove tokens or content from ancester nodes
+    # and content is not filtered correctly
 
     # Ensure that the filtered syntax tree contains only heading nodes
     resulting_markdown = parser.syntax_tree_to_text(syntax_tree)

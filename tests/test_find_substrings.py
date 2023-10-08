@@ -1,8 +1,10 @@
+import pytest
 from highlights_prettifier.range import Range, substring_with_range
 from highlights_prettifier.highlight_finder import (
     find_substrings_sequence,
     fuzzy_find_substrings_sequence,
-    refine_match,
+    refine_matching_sequences,
+    refine_matching_tokens,
     tokenize_from_text,
 )
 
@@ -40,7 +42,7 @@ def test_fuzzy_find_exact_match():
 
 def test_fuzzy_find_partial_match():
     long_string = "This is an example of fuzzy matching in Python."
-    substrings = ["example  of  fuzzy ", "matching- in"]
+    substrings = ["example  of  fuzzy", "matching- in"]
     result_ranges = list(fuzzy_find_substrings_sequence(long_string, substrings))
     result_string = [
         substring_with_range(long_string, range) for range in result_ranges
@@ -49,6 +51,7 @@ def test_fuzzy_find_partial_match():
     assert result_string == expected
 
 
+# TODO: Fix unit test
 def test_fuzzy_find_no_match():
     long_string = "This is an example of fuzzy matching in Python."
     substrings = ["nonexistent   substring", "not   found"]
@@ -65,9 +68,48 @@ def test_tokenization():
     assert len(tokens_1) == len(tokens_2)
 
 
-def test_refine_match():
-    hay = "title} Life doesn't stand still. Neither can the code that we write. In order to keep up with today's near-frantic pace of change, we need to make every effort to write code that's as loose---as flexible---as possible. Otherwise we may find our code quickly becoming outdated, or too brittle to fix, and may ultimately be left behind in the mad dash toward the future. Back in "
-    needle = "Life doesn’t stand still. Neither can the code that we write. In order to keep up with today’s near-frantic pace of change, we need to make every effort to write code that’s as loose—as flexible—as possible. Otherwise we may find our code quickly becoming outdated, or too brittle to fix, and may ultimately be left behind in the mad dash toward the future."
-    result = refine_match(hay, needle)
-    expected = "Life doesn't stand still. Neither can the code that we write. In order to keep up with today's near-frantic pace of change, we need to make every effort to write code that's as loose---as flexible---as possible. Otherwise we may find our code quickly becoming outdated, or too brittle to fix, and may ultimately be left behind in the mad dash toward the future."
+@pytest.mark.parametrize(
+    "hay, needle, expected",
+    [
+        (
+            "title} Life doesn't stand still. Neither can the code that we write. In order to keep up with today's near-frantic pace of change, we need to make every effort to write code that's as loose---as flexible---as possible. Otherwise we may find our code quickly becoming outdated, or too brittle to fix, and may ultimately be left behind in the mad dash toward the future. Back in ",
+            "Life doesn’t stand still. Neither can the code that we write. In order to keep up with today’s near-frantic pace of change, we need to make every effort to write code that’s as loose—as flexible—as possible. Otherwise we may find our code quickly becoming outdated, or too brittle to fix, and may ultimately be left behind in the mad dash toward the future.",
+            "Life doesn't stand still. Neither can the code that we write. In order to keep up with today's near-frantic pace of change, we need to make every effort to write code that's as loose---as flexible---as possible. Otherwise we may find our code quickly becoming outdated, or too brittle to fix, and may ultimately be left behind in the mad dash toward the future.",
+        ),
+        (
+            " This means there's a simple principle you should follow: Tip 44   Decoupled Code Is Easier to Change Given that we don't normally code using steel beams and rivets, just what does it mean to decouple code? In this section we'll talk about: Train wrecks---chains of method calls Globalization---the dangers of static things Inheritance---why subclassing is dangerous To some extent this list is artificial: coupling can occur just about any time two pieces of code share something, so as you read what follows keep an eye out for the underlying patterns so you can apply them to [your]{.emph} code. And keep a lookout for some of the symptoms of coupling: Wacky dependencies between unrelated modules or libraries. \"Simple\" changes to one module that propagate through unrelated modules in the system or break stuff elsewhere in the system. Developers who are afraid to change code because they aren't sure what might be affected. Meetings where everyone has to attend because no one is sure who will be affected by a change. Train Wrecks We've all seen (and probably written) code like this: \u200b[\xa0]{.codeprefix}   \u200b public \u200b \u200b void \u200b applyDiscount(customer, order_id, discount) { \u200b[\xa0]{.codeprefix}   totals = customer \u200b[",
+            "Tip 44 Decoupled Code Is Easier to Change Given that we don’t normally code using steel beams and rivets, just what does it mean to decouple code? In this section we’ll talk about: Train wrecks—chains of method calls Globalization—the dangers of static things Inheritance—why subclassing is dangerous To some extent this list is artificial: coupling can occur just about any time two pieces of code share something, so as you read what follows keep an eye out for the underlying patterns so you can apply them to your code. And keep a lookout for some of the symptoms of coupling: Wacky dependencies between unrelated modules or libraries. “Simple” changes to one module that propagate through unrelated modules in the system or break stuff elsewhere in the system. Developers who are afraid to change code because they aren’t sure what might be affected. Meetings where everyone has to attend because no one is sure who will be affected by a change.",
+            "Tip 44 Decoupled Code Is Easier to Change Given that we don't normally code using steel beams and rivets, just what does it mean to decouple code? In this section we'll talk about: Train wrecks---chains of method calls Globalization---the dangers of static things Inheritance---why subclassing is dangerous To some extent this list is artificial: coupling can occur just about any time two pieces of code share something, so as you read what follows keep an eye out for the underlying patterns so you can apply them to [your]{.emph} code. And keep a lookout for some of the symptoms of coupling: Wacky dependencies between unrelated modules or libraries. \"Simple\" changes to one module that propagate through unrelated modules in the system or break stuff elsewhere in the system. Developers who are afraid to change code because they aren't sure what might be affected. Meetings where everyone has to attend because no one is sure who will be affected by a change.",
+        )
+        # Add more test cases as needed
+    ],
+)
+def test_refine_match_matching_tokens(hay, needle, expected):
+    result = refine_matching_tokens(hay, needle)
+    assert result == expected
+
+
+@pytest.mark.parametrize(
+    "hay, needle, expected",
+    [
+        (
+            " We discuss [Tell, Don't Ask]{.emph} in o",
+            "Tell, Don’t Ask",
+            "Tell, Don't Ask",
+        ),
+        (
+            " We discuss [Tell, Don't Ask]{.emph} in o",
+            "We discuss Tell, Don't Ask in",
+            "We discuss [Tell, Don't Ask]{.emph} in",
+        ),
+        (
+            "We We We discuss [Tell, Don't Ask]{.emph} in o o o",
+            "We discuss Tell, Don't Ask in",
+            "We discuss [Tell, Don't Ask]{.emph} in",
+        )
+        # Add more test cases as needed
+    ],
+)
+def test_refine_match_adjusting_length(hay, needle, expected):
+    result = refine_matching_sequences(hay, needle)  # TODO: Change func
     assert result == expected
