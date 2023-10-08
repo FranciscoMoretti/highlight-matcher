@@ -13,4 +13,6 @@ black==21.7b0
 nltk
 thefuzz
 ebooklib
-markdown-it-py[plugins]
+markdown-it-py
+mdformat-gfm
+linkify_it_py

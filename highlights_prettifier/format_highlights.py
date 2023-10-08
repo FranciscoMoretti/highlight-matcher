@@ -9,6 +9,7 @@ from range import Range, calculate_overlap
 
 from syntax_tree_utils import filter_syntax_tree, walk_up_find
 from mdformat.renderer import MDRenderer
+import mdformat.plugins
 from markdown_it import MarkdownIt
 from rapidfuzz import fuzz, process
 from markdown_it.tree import SyntaxTreeNode
@@ -26,7 +27,8 @@ class MakdownParser:
     """
 
     def __init__(self):
-        self.mdit = MarkdownIt()
+        self.mdit = MarkdownIt("gfm-like").use(keyword="value")
+        # TODO Parse github markdown better?
         self.env = {}
 
     def text_to_syntax_tree(self, text) -> SyntaxTreeNode:
@@ -34,10 +36,23 @@ class MakdownParser:
         return SyntaxTreeNode(tokens)
 
     def syntax_tree_to_text(self, syntax_tree):
-        resulting_markdown = MDRenderer().render(
+        return self.mdit.renderer.render(
             syntax_tree.to_tokens(), self.mdit.options, self.env
         )
-        return resulting_markdown
+
+        ## mdformat rendering to Markdown directly
+
+        # resulting_markdown = MDRenderer().render(
+        #     syntax_tree.to_tokens(),
+        #     {
+        #         "parser_extension": [
+        #             mdformat.plugins.PARSER_EXTENSIONS["tables"],
+        #             mdformat.plugins.PARSER_EXTENSIONS["gfm"],
+        #         ]
+        #     },
+        #     self.env,
+        # )
+        # return resulting_markdown
 
 
 class Status(Enum):

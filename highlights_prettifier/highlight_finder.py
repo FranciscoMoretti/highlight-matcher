@@ -2,7 +2,11 @@ import difflib
 import re
 from typing import List
 from uu import Error
-from highlights_prettifier.range import Range, extend_substring_range
+from highlights_prettifier.range import (
+    Range,
+    extend_substring_range,
+    substring_with_range,
+)
 from rapidfuzz import fuzz, process, utils
 from nltk.util import ngrams
 
@@ -33,22 +37,46 @@ def untokenize_to_text(tokens):
     return " ".join(tokens)
 
 
+SEARCH_WINDOW_FACTOR = 2
+
+
 def fuzzy_find_substrings_sequence(
     long_string: str, substrings: List[str], raiseErrors=False
 ):
     current_start = 0
-    current_hay = long_string
-
     for substring in substrings:
-        first_alignment = fuzz.partial_ratio_alignment(
-            current_hay, substring, score_cutoff=FUZZY_APROXIMATION_MIN_SCORE
-        )
+        if len(substring) <= 10:
+            continue
+        # Extend window until first alignment
+        window_length = len(substring) * SEARCH_WINDOW_FACTOR
+        first_alignment = None
+        current_end = current_start
+        current_hay = ""
+        while first_alignment is None:
+            current_end = min(current_end + window_length, len(long_string))
+            current_hay = long_string[current_start:current_end]
+            first_alignment = fuzz.partial_ratio_alignment(
+                current_hay,
+                substring,
+                score_cutoff=FUZZY_APROXIMATION_MIN_SCORE,
+            )
+            if first_alignment is None and current_end == len(long_string):
+                # Reached the end without finding, try being more permisive
+                first_alignment = fuzz.partial_ratio_alignment(
+                    current_hay,
+                    substring,
+                    score_cutoff=FUZZY_APROXIMATION_MIN_SCORE - 10,
+                )
+                if not first_alignment:
+                    # Give up without finding a match
+                    break
         if first_alignment is None:
             # TODO: Fail if no initial alignment
             if raiseErrors:
                 raise Error("First alignment failed")
             else:
                 continue
+
         # TODO: Extend with range
         smaller_hay = _get_smaller_hay_around_alignment(current_hay, first_alignment)
         max_sim_string = refine_matching_sequences(smaller_hay, substring)
@@ -69,7 +97,6 @@ def fuzzy_find_substrings_sequence(
                 end_pos=current_start + alignment.src_end,
             )
             current_start += alignment.src_end
-            current_hay = long_string[current_start:]
 
 
 def _get_smaller_hay_around_alignment(current_hay: str, first_alignment):

@@ -1,5 +1,5 @@
 import pytest
-from highlights_prettifier.range import Range, substring_with_range
+from highlights_prettifier.range import substring_with_range
 from highlights_prettifier.highlight_finder import (
     find_substrings_sequence,
     fuzzy_find_substrings_sequence,
