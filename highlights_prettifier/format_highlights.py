@@ -27,7 +27,7 @@ class MakdownParser:
     """
 
     def __init__(self):
-        self.mdit = MarkdownIt("gfm-like").use(keyword="value")
+        self.mdit = MarkdownIt("gfm-like")
         # TODO Parse github markdown better?
         self.env = {}
 
