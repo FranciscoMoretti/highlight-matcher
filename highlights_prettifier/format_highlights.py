@@ -219,6 +219,8 @@ class NodeStatusTree:
     def _remove_nodes(self, nodes_to_remove):
         for node in nodes_to_remove:
             if parent := node.parent:
+                if parent.token and parent.token.children and node.token:
+                    parent.token.children.remove(node.token)
                 parent.children.remove(node)
                 # node.status = Status.REMOVED  # Already removed
             else:
@@ -238,21 +240,21 @@ class NodeStatusTree:
 
     def _update_ascendants_content(self):
         remaining_nodes = self._walk_nodes_leafs_to_root()
-        for start_node in remaining_nodes:
-            node = start_node
-            while node is not None:
-                if (
-                    hasattr(node, "content")
-                    and node.token
-                    and node.token.content
-                    and node.children
-                ):
-                    node.token.content = " ".join(
-                        subnode.content
-                        for subnode in node.children
-                        if hasattr(subnode, "content")
-                    )
-                node = node.parent
+        # for start_node in remaining_nodes:
+        #     node = start_node
+        #     while node is not None:
+        #         if (
+        #             hasattr(node, "content")
+        #             and node.token
+        #             and node.token.content
+        #             and node.children
+        #         ):
+        #             node.token.content = " ".join(
+        #                 subnode.content
+        #                 for subnode in node.children
+        #                 if hasattr(subnode, "content")
+        #             )
+        #         node = node.parent
 
     def _walk_nodes_leafs_to_root(self):
         return sorted(

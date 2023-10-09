@@ -11,7 +11,7 @@ def save_markdown_to_file(markdown, output_file):
 if __name__ == "__main__":
     article_file_path = "data/markdown_ebook.md"
     output_file = "data/output.html"  # Then transform to MD with pandoc
-    input_file = "data/input_small.md"
+    input_file = "data/input.md"
     # Read input from the input.md file
     input_text = ""
     article_text = ""
