@@ -4,6 +4,8 @@ from uu import Error
 from attr import dataclass
 import nltk
 from dataclasses import dataclass
+
+from numpy import sort
 from highlight_finder import find_substrings_sequence, fuzzy_find_substrings_sequence
 from range import Range, calculate_overlap
 
@@ -13,6 +15,7 @@ import mdformat.plugins
 from markdown_it import MarkdownIt
 from rapidfuzz import fuzz, process
 from markdown_it.tree import SyntaxTreeNode
+from markdown_it.token import Token
 from enum import Enum
 
 # nltk.download("punkt")
@@ -31,8 +34,10 @@ class MakdownParser:
         # TODO Parse github markdown better?
         self.env = {}
 
-    def text_to_syntax_tree(self, text) -> SyntaxTreeNode:
-        tokens = self.mdit.parse(text, self.env)
+    def text_to_tokens(self, text) -> List[Token]:
+        return self.mdit.parse(text, self.env)
+
+    def tokens_to_syntax_tree(self, tokens) -> SyntaxTreeNode:
         return SyntaxTreeNode(tokens)
 
     def syntax_tree_to_text(self, syntax_tree):
@@ -62,6 +67,7 @@ class Status(Enum):
         3  # Nodes that are marked for removal but have not been removed yet.
     )
     REMOVED = 4  # Nodes that have been removed and should not be considered in the list anymore.
+    NO_STATUS = 5  # Some nodes can't hold a status
 
 
 @dataclass
@@ -134,80 +140,138 @@ class NodeStringMap:
             )
 
 
+def node_has_status(node: SyntaxTreeNode):
+    """
+    Returns a node status
+    """
+    return get_node_status(node) != Status.NO_STATUS
+
+
+def get_node_status(node: SyntaxTreeNode):
+    """
+    Returns a node status
+    """
+    if node.token and (status := node.token.meta.get("status")):
+        return status
+    return Status.NO_STATUS
+
+
+def set_node_status(node: SyntaxTreeNode, status: Status):
+    """
+    Sets a node status
+    """
+    if node.token:
+        node.token.meta["status"] = status
+
+
+# TODO: Should delete paragraphs without children because they have no token
+
+
 @dataclass
 class NodeStatusTree:
     root_node: SyntaxTreeNode
-    nodes_status_list: List[NodeStatus]
 
     def update_status(
         self, should_update: Callable[[SyntaxTreeNode], bool], new_status: Status
     ) -> int:
         num_updated = 0
-        for current in self.root_node.walk():
-            if should_update(current):
-                node_status = self._find_node_status_of_node(current)
-                if node_status.status != new_status:
-                    node_status.status = new_status
-                    num_updated += 1
+        for node in self.root_node.walk():
+            if should_update(node):
+                if node_has_status(node):
+                    if get_node_status(node) != new_status:
+                        set_node_status(node, new_status)
+                        num_updated += 1
         return num_updated
 
     def perform_removals(self) -> int:
         self._mark_ascendants_as_enabled()
+        # sorted_nodes = self._walk_nodes_leafs_to_root()
         nodes_to_remove = list(
             filter(
-                lambda node_status: node_status.status == Status.TO_BE_REMOVED,
-                self.nodes_status_list,
+                lambda node: get_node_status(node) == Status.TO_BE_REMOVED,
+                self.root_node.walk(),
             )
         )
-        for current_node_status in nodes_to_remove:
-            if parent := current_node_status.node.parent:
-                parent.children.remove(current_node_status.node)
-                current_node_status.status = Status.REMOVED
-            else:
-                raise Error("Attempted to remove node without parent")
-        return len(nodes_to_remove)
+        self._remove_nodes(nodes_to_remove)
+        nodes_no_children = list(
+            filter(
+                lambda node: (
+                    get_node_status(node) != Status.ENABLED and len(node.children) == 0
+                ),
+                self.root_node.walk(),
+            )
+        )
+        self._remove_nodes(nodes_no_children)
+
+        self._update_ascendants_content()
+        return len(nodes_to_remove) + len(nodes_no_children)
 
     def find_nodes_with_content(self, content: str):
         return list(
             filter(
-                lambda node_status: content in node_status.node.content
-                if hasattr(node_status.node, "content")
+                lambda node: content in node.content
+                if hasattr(node, "content")
                 else False,
-                list(self.nodes_status_list),
+                self.root_node.walk(),
             )
         )
 
-    def _find_node_status_of_node(self, current):
-        return next((el for el in self.nodes_status_list if el.node == current))
+    def _remove_nodes(self, nodes_to_remove):
+        for node in nodes_to_remove:
+            if parent := node.parent:
+                parent.children.remove(node)
+                # node.status = Status.REMOVED  # Already removed
+            else:
+                raise Error("Attempted to remove node without parent")
 
     def _mark_ascendants_as_enabled(self):
-        enabled_node_statuses = [
-            el for el in self.nodes_status_list if el.status == Status.ENABLED
+        enabled_nodes = [
+            node
+            for node in self.root_node.walk()
+            if get_node_status(node) == Status.ENABLED
         ]
-        for enabled_node_status in enabled_node_statuses:
-            current_node_status = enabled_node_status
-            while current_node_status.node.parent is not None:
-                if current_node_status.status != Status.ENABLED:
-                    current_node_status.status = Status.ENABLED
-                current_node_status = self._find_node_status_of_node(
-                    current_node_status.node.parent
-                )
+        for node in enabled_nodes:
+            while node.parent is not None:
+                if get_node_status(node) not in [Status.ENABLED, Status.NO_STATUS]:
+                    set_node_status(node, Status.ENABLED)
+                node = node.parent
+
+    def _update_ascendants_content(self):
+        remaining_nodes = self._walk_nodes_leafs_to_root()
+        for start_node in remaining_nodes:
+            node = start_node
+            while node is not None:
+                if (
+                    hasattr(node, "content")
+                    and node.token
+                    and node.token.content
+                    and node.children
+                ):
+                    node.token.content = " ".join(
+                        subnode.content
+                        for subnode in node.children
+                        if hasattr(subnode, "content")
+                    )
+                node = node.parent
+
+    def _walk_nodes_leafs_to_root(self):
+        return sorted(
+            list(self.root_node.walk()),
+            key=lambda node: node.level if hasattr(node, "level") else -1,
+            reverse=True,
+        )
 
 
 def create_formated_highlights(article_text, highlights):
     # Create a dummy root node to hold the filtered nodes
     parser = MakdownParser()
-    syntax_tree = parser.text_to_syntax_tree(article_text)
+    tokens = parser.text_to_tokens(article_text)
+    syntax_tree = parser.tokens_to_syntax_tree(tokens)
 
-    node_status_list: List[NodeStatus] = [
-        NodeStatus(node=node, status=Status.TO_BE_REMOVED)
-        for node in syntax_tree.walk()
-    ]
-    node_status_list[0].status = Status.ENABLED  # Keep the root node
+    for node in syntax_tree.walk():
+        set_node_status(node, Status.TO_BE_REMOVED)
 
-    status_tree = NodeStatusTree(
-        root_node=syntax_tree, nodes_status_list=node_status_list
-    )
+    status_tree = NodeStatusTree(root_node=syntax_tree)
 
     node_strings_map = NodeStringMap(root_node=syntax_tree)
 
@@ -215,9 +279,6 @@ def create_formated_highlights(article_text, highlights):
     highlihgt_matches_positions = list(
         fuzzy_find_substrings_sequence(node_strings_map.string, highlights)
     )
-
-    for range in highlihgt_matches_positions:
-        print(node_strings_map.string[range.start_pos : range.end_pos])
 
     matched_node_conections = filter_node_string_connections(
         node_connections=node_strings_map.connections,
@@ -248,6 +309,7 @@ def create_formated_highlights(article_text, highlights):
 
     while num_removed := status_tree.perform_removals():
         print(f"Remmoved {num_removed} nodes")
+
     # TODO: Removal doesn't remove tokens or content from ancester nodes
     # and content is not filtered correctly
 
