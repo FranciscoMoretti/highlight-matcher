@@ -20,6 +20,11 @@ expose order objects.
 People often talk about something
 """
 
+markdown_text_3 = """
+In Topic 8, [​*The Essence of Good
+Design*​](#f_0026.xhtml#essence_of_design) we claim
+"""
+
 
 @pytest.mark.parametrize(
     "input_md, expected_string, expected_links_content",
@@ -49,6 +54,19 @@ People often talk about something
                 "The Law of Demeter",
                 " ",
                 "People often talk about something",
+            ],
+        ),
+        (
+            markdown_text_3,
+            "In Topic 8, \u200bThe Essence of Good Design\u200b we claim",
+            [
+                "In Topic 8, ",
+                "\u200b",  # empty whitespace char
+                "The Essence of Good",
+                " ",
+                "Design",
+                "\u200b",
+                " we claim",
             ],
         ),
     ],
