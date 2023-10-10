@@ -23,8 +23,16 @@ class NodeStringMap:
         for node in root_node.walk():
             if node.type == "text":
                 stringifyied = node.content
-            elif node.type in ["softbreak", "paragraph", "heading"]:
-                stringifyied = " "
+            elif node.type in [
+                "softbreak",
+                "paragraph",
+                "heading",
+                "td",
+                "tr",
+                "th",
+                "tbody",
+            ]:
+                stringifyied = "" if self.string.endswith(" ") else " "
             else:
                 continue
             start_index = len(self.string)
@@ -34,8 +42,9 @@ class NodeStringMap:
                 continue
 
             self.string += stringifyied
-            self.links.append(
-                NodeStringLink(
-                    node=node, range=Range(start_pos=start_index, end_pos=end_index)
+            if node.type == "text":
+                self.links.append(
+                    NodeStringLink(
+                        node=node, range=Range(start_pos=start_index, end_pos=end_index)
+                    )
                 )
-            )

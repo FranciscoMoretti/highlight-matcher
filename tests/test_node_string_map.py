@@ -25,6 +25,12 @@ In Topic 8, [​*The Essence of Good
 Design*​](#f_0026.xhtml#essence_of_design) we claim
 """
 
+markdown_text_4 = """
+|        |                                                 |
+|--------|-------------------------------------------------|
+| Tip 14 | Good Design Is Easier to Change Than Bad Design |
+"""
+
 
 @pytest.mark.parametrize(
     "input_md, expected_string, expected_links_content",
@@ -32,7 +38,7 @@ Design*​](#f_0026.xhtml#essence_of_design) we claim
         (
             "This is\n a test.",
             "This is a test.",
-            ["This is", " ", "a test."],
+            ["This is", "a test."],
         ),
         (
             markdown_text_1,
@@ -41,7 +47,6 @@ Design*​](#f_0026.xhtml#essence_of_design) we claim
                 "Lorem Ipsum is ",
                 "simply dummy",
                 " text of the printing",
-                " ",
                 "and typesetting industry.",
             ],
         ),
@@ -50,9 +55,7 @@ Design*​](#f_0026.xhtml#essence_of_design) we claim
             "expose order objects. The Law of Demeter People often talk about something",
             [
                 "expose order objects.",
-                " ",
                 "The Law of Demeter",
-                " ",
                 "People often talk about something",
             ],
         ),
@@ -63,11 +66,15 @@ Design*​](#f_0026.xhtml#essence_of_design) we claim
                 "In Topic 8, ",
                 "\u200b",  # empty whitespace char
                 "The Essence of Good",
-                " ",
                 "Design",
                 "\u200b",
                 " we claim",
             ],
+        ),
+        (
+            markdown_text_4,
+            "Tip 14 Good Design Is Easier to Change Than Bad Design",
+            ["Tip 14", "Good Design Is Easier to Change Than Bad Design"],
         ),
     ],
 )

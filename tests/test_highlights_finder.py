@@ -37,6 +37,7 @@ highlights_1 = [
 
 expected_filtered_content_1 = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt\nut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation\nullamco laboris nisi ut aliquip ex ea commodo consequat.\n"
 
+
 FUZZY_MATCH_MIN_SCORE = 80
 
 
