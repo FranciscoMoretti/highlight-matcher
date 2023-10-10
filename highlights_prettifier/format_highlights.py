@@ -8,9 +8,8 @@ from highlights_prettifier.markdown_parser import MakdownParser
 from highlights_prettifier.node_string_map import NodeStringLink, NodeStringMap
 from highlights_prettifier.status import Status
 from highlights_prettifier.status_tree import StatusTree, set_node_status
-from highlights_prettifier.range import Range, calculate_overlap
+from highlights_prettifier.range import Range, calculate_overlap, substring_with_range
 from highlights_prettifier.syntax_tree_utils import walk_up_find
-
 from markdown_it.tree import SyntaxTreeNode
 
 
@@ -45,6 +44,10 @@ def _filter_node_text_with_range(node_link, overlap_range):
         overlap_range.start_pos - node_link.range.start_pos,
         overlap_range.end_pos - node_link.range.start_pos,
     )
+    print(
+        "Filtered content: "
+        f"{substring_with_range(node_link.node.content, overlap_relative_to_node)}"
+    )
     overlap_text = node_link.node.content[
         overlap_relative_to_node.start_pos : overlap_relative_to_node.end_pos
     ]
@@ -53,6 +56,7 @@ def _filter_node_text_with_range(node_link, overlap_range):
     # to solve this process all nodes from the range at the same time
     if node_link.node.token:
         node_link.node.token.content = overlap_text
+        node_link.range = overlap_range
 
 
 def create_formated_highlights(article_text, highlights):
@@ -68,17 +72,26 @@ def create_formated_highlights(article_text, highlights):
 
     node_strings_map = NodeStringMap(root_node=syntax_tree)
 
-    # TODO: Replace filter functions with matched_nodes
-    highlihgt_matches_positions = list(
+    highlihgt_matches_ranges = list(
         fuzzy_find_substrings_sequence(node_strings_map.string, highlights)
     )
+    for range in highlihgt_matches_ranges:
+        print(
+            "Matched strings: "
+            f"{substring_with_range(string=node_strings_map.string, range=range)}"
+        )
 
     # TODO: Investigate problem of missing whitespaces
-    matched_node_conections = filter_node_string_links(
+    matched_node_links = filter_node_string_links(
         node_links=node_strings_map.links,
-        filter_ranges=highlihgt_matches_positions,
+        filter_ranges=highlihgt_matches_ranges,
     )
-    matched_nodes = [node_link.node for node_link in matched_node_conections]
+    for link in matched_node_links:
+        print(
+            "Matched text: "
+            f"{substring_with_range(string=node_strings_map.string, range=link.range)}"
+        )
+    matched_nodes = [node_link.node for node_link in matched_node_links]
 
     findings = status_tree.find_nodes_with_content("is the enemy of change")
 
@@ -91,14 +104,11 @@ def create_formated_highlights(article_text, highlights):
         should_update=lambda node: node in matched_nodes,
         new_status=Status.ENABLED,
     )
-    findings = status_tree.find_nodes_with_content("is the enemy of change")
-
     print(f"Updated {num_updated} nodes filter 1")
 
     num_updated = status_tree.update_status(
         should_update=ascendant_is_heading, new_status=Status.ENABLED
     )
-    findings = status_tree.find_nodes_with_content("is the enemy of change")
     print(f"Updated {num_updated} nodes filter 2")
 
     while num_removed := status_tree.perform_removals():

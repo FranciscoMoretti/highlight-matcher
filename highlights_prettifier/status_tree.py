@@ -7,6 +7,8 @@ from highlights_prettifier.status import Status
 
 from markdown_it.tree import SyntaxTreeNode
 
+from highlights_prettifier.syntax_tree_utils import walk_up_find, walk_up_find_node
+
 
 def node_has_status(node: SyntaxTreeNode):
     """
@@ -84,12 +86,26 @@ class StatusTree:
     def _remove_nodes(self, nodes_to_remove):
         for node in nodes_to_remove:
             if parent := node.parent:
-                if parent.token and parent.token.children and node.token:
-                    parent.token.children.remove(node.token)
+                if node.token is not None:
+                    self._remove_token(node.token, parent)
+                if node.is_nested and node.nester_tokens.closing is not None:
+                    self._remove_token(node.nester_tokens.closing, parent)
+                if node.is_nested and node.nester_tokens.opening is not None:
+                    self._remove_token(node.nester_tokens.opening, parent)
+
                 parent.children.remove(node)
                 # node.status = Status.REMOVED  # Already removed
             else:
                 raise Error("Attempted to remove node without parent")
+
+    def _remove_token(self, token, parent):
+        if token is not None:
+            ancestor_with_token = walk_up_find_node(
+                parent,
+                lambda node: node.token is not None and node.token.children,
+            )
+            if ancestor_with_token is not None:
+                ancestor_with_token.token.children.remove(token)
 
     def _mark_ascendants_as_enabled(self):
         enabled_nodes = [
@@ -99,8 +115,11 @@ class StatusTree:
         ]
         for node in enabled_nodes:
             while node.parent is not None:
-                if get_node_status(node) not in [Status.ENABLED, Status.NO_STATUS]:
-                    set_node_status(node, Status.ENABLED)
+                if get_node_status(node.parent) not in [
+                    Status.ENABLED,
+                    Status.NO_STATUS,
+                ]:
+                    set_node_status(node.parent, Status.ENABLED)
                 node = node.parent
 
     def _update_ascendants_content(self):

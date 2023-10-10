@@ -41,18 +41,40 @@ def test_fuzzy_find_exact_match():
     assert result_string == expected
 
 
-def test_fuzzy_find_partial_match():
-    long_string = "This is an example of fuzzy matching in Python."
-    substrings = ["example  of  fuzzy", "matching- in"]
+book_content_2 = "In Topic 8, [​*The Essence of Good Design*​](#f_0026.xhtml#essence_of_design) we claim that using good design principles will make the code you write easy to change. Coupling is the enemy of change, because it links together things that must change in parallel. This makes change more difficult: either you spend time tracking down all the parts that need changing, or you spend time wondering why things broke when you changed “just one thing” and not the other things to which it was coupled. "
+highlights_2 = [
+    "Coupling is the enemy of change, because it links together things that must change in parallel. This makes change more difficult: either you spend time tracking down all the parts that need changing, or you spend time wondering why things broke when you changed “just one thing” and not the other things to which it was coupled.",
+]
+
+expected_result_strings = [
+    "Coupling is the enemy of change, because it links together things that must change in parallel. This makes change more difficult: either you spend time tracking down all the parts that need changing, or you spend time wondering why things broke when you changed “just one thing” and not the other things to which it was coupled."
+]
+
+
+@pytest.mark.parametrize(
+    "long_string, substrings, expected",
+    [
+        (
+            "This is an example of fuzzy matching in Python.",
+            ["example  of  fuzzy", "matching- in"],
+            ["example of fuzzy", "matching in"],
+        ),
+        (
+            book_content_2,
+            highlights_2,
+            expected_result_strings,
+        ),
+        # Add more test cases as needed
+    ],
+)
+def test_fuzzy_find_partial_match(long_string, substrings, expected):
     result_ranges = list(fuzzy_find_substrings_sequence(long_string, substrings))
     result_string = [
         substring_with_range(long_string, range) for range in result_ranges
     ]
-    expected = ["example of fuzzy", "matching in"]
     assert result_string == expected
 
 
-# TODO: Fix unit test
 def test_fuzzy_find_no_match():
     long_string = "This is an example of fuzzy matching in Python."
     substrings = ["nonexistent   substring", "not   found"]
