@@ -14,18 +14,6 @@ FUZZY_MATCH_MIN_SCORE = 90
 FUZZY_APROXIMATION_MIN_SCORE = 80
 
 
-def find_substrings_sequence(long_string: str, substrings: List[str]):
-    start = 0
-    for substring in substrings:
-        start_pos = long_string.find(substring, start)
-        if start_pos == -1:
-            # If the substring is not found, stop the generator
-            break
-        end_pos = start_pos + len(substring)
-        yield Range(start_pos, end_pos)
-        start = end_pos + 1
-
-
 def tokenize_from_text(text):
     # Tokenize the input string into words (tokens)
     # TODO: This operation is not safe for multiple whitespaces because it doesn't count
@@ -42,11 +30,11 @@ SEARCH_WINDOW_FACTOR = 2
 
 # TODO: Highlight matching has to be stripped. whitespaces can mean breaks, paragraphs or titles
 def fuzzy_find_substrings_sequence(
-    long_string: str, substrings: List[str], raiseErrors=False
+    long_string: str, substrings: List[str], raiseErrors=False, min_chars=6
 ):
     current_start = 0
     for substring in substrings:
-        if len(substring) <= 10:
+        if len(substring) < min_chars:
             continue
         # Extend window until first alignment
         window_length = len(substring) * SEARCH_WINDOW_FACTOR

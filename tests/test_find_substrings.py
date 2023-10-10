@@ -1,7 +1,6 @@
 import pytest
 from highlights_prettifier.range import substring_with_range
 from highlights_prettifier.highlight_finder import (
-    find_substrings_sequence,
     fuzzy_find_substrings_sequence,
     refine_matching_sequences,
     refine_matching_tokens,
@@ -12,7 +11,9 @@ from highlights_prettifier.highlight_finder import (
 def test_find_substring_positions():
     long_string = "This is a long string with some substrings."
     substrings = ["long", "with", "substrings"]
-    positions = list(find_substrings_sequence(long_string, substrings))
+    positions = list(
+        fuzzy_find_substrings_sequence(long_string, substrings, min_chars=4)
+    )
 
     assert substrings == [
         long_string[positions[0].start_pos : positions[0].end_pos],
@@ -24,7 +25,7 @@ def test_find_substring_positions():
 def test_no_match():
     long_string = "This is a long string with some substrings."
     substrings = ["not", "found"]
-    positions = list(find_substrings_sequence(long_string, substrings))
+    positions = list(fuzzy_find_substrings_sequence(long_string, substrings))
 
     assert positions == []
 
