@@ -1,267 +1,58 @@
 """Main module."""
 from typing import Callable, List
 from uu import Error
-from attr import dataclass
-import nltk
 from dataclasses import dataclass
 
-from numpy import sort
-from highlight_finder import find_substrings_sequence, fuzzy_find_substrings_sequence
-from range import Range, calculate_overlap
+from highlights_prettifier.highlight_finder import fuzzy_find_substrings_sequence
+from highlights_prettifier.markdown_parser import MakdownParser
+from highlights_prettifier.node_string_map import NodeStringLink, NodeStringMap
+from highlights_prettifier.status import Status
+from highlights_prettifier.status_tree import StatusTree, set_node_status
+from highlights_prettifier.range import Range, calculate_overlap
+from highlights_prettifier.syntax_tree_utils import walk_up_find
 
-from syntax_tree_utils import filter_syntax_tree, walk_up_find
-from mdformat.renderer import MDRenderer
-import mdformat.plugins
-from markdown_it import MarkdownIt
-from rapidfuzz import fuzz, process
 from markdown_it.tree import SyntaxTreeNode
-from markdown_it.token import Token
-from enum import Enum
-
-# nltk.download("punkt")
-
-# Customize the fuzziness threshold
-FUZZY_MATCH_MIN_SCORE = 90  # Adjust as needed
 
 
-class MakdownParser:
-    """
-    docstring
-    """
-
-    def __init__(self):
-        self.mdit = MarkdownIt("gfm-like")
-        # TODO Parse github markdown better?
-        self.env = {}
-
-    def text_to_tokens(self, text) -> List[Token]:
-        return self.mdit.parse(text, self.env)
-
-    def tokens_to_syntax_tree(self, tokens) -> SyntaxTreeNode:
-        return SyntaxTreeNode(tokens)
-
-    def syntax_tree_to_text(self, syntax_tree):
-        return self.mdit.renderer.render(
-            syntax_tree.to_tokens(), self.mdit.options, self.env
-        )
-
-        ## mdformat rendering to Markdown directly
-
-        # resulting_markdown = MDRenderer().render(
-        #     syntax_tree.to_tokens(),
-        #     {
-        #         "parser_extension": [
-        #             mdformat.plugins.PARSER_EXTENSIONS["tables"],
-        #             mdformat.plugins.PARSER_EXTENSIONS["gfm"],
-        #         ]
-        #     },
-        #     self.env,
-        # )
-        # return resulting_markdown
-
-
-class Status(Enum):
-    ENABLED = 1  # Nodes that are currently enabled or active.
-    DISABLED = 2  # Nodes that are currently disabled or inactive.
-    TO_BE_REMOVED = (
-        3  # Nodes that are marked for removal but have not been removed yet.
-    )
-    REMOVED = 4  # Nodes that have been removed and should not be considered in the list anymore.
-    NO_STATUS = 5  # Some nodes can't hold a status
-
-
-@dataclass
-class NodeStatus:
-    node: SyntaxTreeNode
-    status: Status
-
-
-@dataclass
-class NodeStringConnection:
-    node: SyntaxTreeNode
-    range: Range
-
-
-def filter_node_string_connections(
-    node_connections: List[NodeStringConnection], filter_ranges: List[Range]
-) -> List[NodeStringConnection]:
+def filter_node_string_links(
+    node_links: List[NodeStringLink], filter_ranges: List[Range]
+) -> List[NodeStringLink]:
     filtered_list = []
-    node_idx, range_idx = 0, 0  # Index variables for node_connections and filter_ranges
+    node_idx, range_idx = 0, 0  # Index variables for node_links and filter_ranges
 
-    while node_idx < len(node_connections) and range_idx < len(filter_ranges):
-        node_connection = node_connections[node_idx]
+    while node_idx < len(node_links) and range_idx < len(filter_ranges):
+        node_link = node_links[node_idx]
         filter_range = filter_ranges[range_idx]
 
-        if node_connection.range.end_pos < filter_range.start_pos:
-            # If node_connection is completed before filter_range, advance node_connection
+        if node_link.range.end_pos < filter_range.start_pos:
+            # If node_link is completed before filter_range, advance node_link
             node_idx += 1
-        elif node_connection.range.start_pos > filter_range.end_pos:
-            # If node_connection is completed after filter_range, advance filter_range
+        elif node_link.range.start_pos > filter_range.end_pos:
+            # If node_link is completed after filter_range, advance filter_range
             range_idx += 1
         else:
-            # If there is an overlap, add node_connection to the filtered list
-            overlap_range = calculate_overlap(node_connection.range, filter_range)
-            _filter_node_text_with_range(node_connection, overlap_range)
-            filtered_list.append(node_connection)
-            node_idx += 1  # Move to the next node_connection, as ranges do not overlap
+            # If there is an overlap, add node_link to the filtered list
+            overlap_range = calculate_overlap(node_link.range, filter_range)
+            _filter_node_text_with_range(node_link, overlap_range)
+            filtered_list.append(node_link)
+            node_idx += 1  # Move to the next node_link, as ranges do not overlap
 
     return filtered_list
 
 
-def _filter_node_text_with_range(node_connection, overlap_range):
+def _filter_node_text_with_range(node_link, overlap_range):
     overlap_relative_to_node = Range(
-        overlap_range.start_pos - node_connection.range.start_pos,
-        overlap_range.end_pos - node_connection.range.start_pos,
+        overlap_range.start_pos - node_link.range.start_pos,
+        overlap_range.end_pos - node_link.range.start_pos,
     )
-    overlap_text = node_connection.node.content[
+    overlap_text = node_link.node.content[
         overlap_relative_to_node.start_pos : overlap_relative_to_node.end_pos
     ]
-    node_connection.node.token.content = overlap_text
-
-
-class NodeStringMap:
-    def __init__(self, root_node: SyntaxTreeNode):
-        self.string = ""
-        self.connections = []
-        self._build_map_conections(root_node)
-
-    def _build_map_conections(self, root_node):
-        text_nodes = [node for node in root_node.walk() if node.type == "text"]
-        start_index = 0
-        end_index = 0
-        for node in text_nodes:
-            start_index = len(self.string)
-            end_index = start_index + len(node.content)
-            self.string += node.content + " "
-            self.connections.append(
-                NodeStringConnection(
-                    node=node, range=Range(start_pos=start_index, end_pos=end_index)
-                )
-            )
-
-
-def node_has_status(node: SyntaxTreeNode):
-    """
-    Returns a node status
-    """
-    return get_node_status(node) != Status.NO_STATUS
-
-
-def get_node_status(node: SyntaxTreeNode):
-    """
-    Returns a node status
-    """
-    if node.token and (status := node.token.meta.get("status")):
-        return status
-    return Status.NO_STATUS
-
-
-def set_node_status(node: SyntaxTreeNode, status: Status):
-    """
-    Sets a node status
-    """
-    if node.token:
-        node.token.meta["status"] = status
-
-
-# TODO: Should delete paragraphs without children because they have no token
-
-
-@dataclass
-class NodeStatusTree:
-    root_node: SyntaxTreeNode
-
-    def update_status(
-        self, should_update: Callable[[SyntaxTreeNode], bool], new_status: Status
-    ) -> int:
-        num_updated = 0
-        for node in self.root_node.walk():
-            if should_update(node):
-                if node_has_status(node):
-                    if get_node_status(node) != new_status:
-                        set_node_status(node, new_status)
-                        num_updated += 1
-        return num_updated
-
-    def perform_removals(self) -> int:
-        self._mark_ascendants_as_enabled()
-        # sorted_nodes = self._walk_nodes_leafs_to_root()
-        nodes_to_remove = list(
-            filter(
-                lambda node: get_node_status(node) == Status.TO_BE_REMOVED,
-                self.root_node.walk(),
-            )
-        )
-        self._remove_nodes(nodes_to_remove)
-        nodes_no_children = list(
-            filter(
-                lambda node: (
-                    get_node_status(node) != Status.ENABLED and len(node.children) == 0
-                ),
-                self.root_node.walk(),
-            )
-        )
-        self._remove_nodes(nodes_no_children)
-
-        self._update_ascendants_content()
-        return len(nodes_to_remove) + len(nodes_no_children)
-
-    def find_nodes_with_content(self, content: str):
-        return list(
-            filter(
-                lambda node: content in node.content
-                if hasattr(node, "content")
-                else False,
-                self.root_node.walk(),
-            )
-        )
-
-    def _remove_nodes(self, nodes_to_remove):
-        for node in nodes_to_remove:
-            if parent := node.parent:
-                if parent.token and parent.token.children and node.token:
-                    parent.token.children.remove(node.token)
-                parent.children.remove(node)
-                # node.status = Status.REMOVED  # Already removed
-            else:
-                raise Error("Attempted to remove node without parent")
-
-    def _mark_ascendants_as_enabled(self):
-        enabled_nodes = [
-            node
-            for node in self.root_node.walk()
-            if get_node_status(node) == Status.ENABLED
-        ]
-        for node in enabled_nodes:
-            while node.parent is not None:
-                if get_node_status(node) not in [Status.ENABLED, Status.NO_STATUS]:
-                    set_node_status(node, Status.ENABLED)
-                node = node.parent
-
-    def _update_ascendants_content(self):
-        remaining_nodes = self._walk_nodes_leafs_to_root()
-        # for start_node in remaining_nodes:
-        #     node = start_node
-        #     while node is not None:
-        #         if (
-        #             hasattr(node, "content")
-        #             and node.token
-        #             and node.token.content
-        #             and node.children
-        #         ):
-        #             node.token.content = " ".join(
-        #                 subnode.content
-        #                 for subnode in node.children
-        #                 if hasattr(subnode, "content")
-        #             )
-        #         node = node.parent
-
-    def _walk_nodes_leafs_to_root(self):
-        return sorted(
-            list(self.root_node.walk()),
-            key=lambda node: node.level if hasattr(node, "level") else -1,
-            reverse=True,
-        )
+    # TODO: Handle the scenario of potentially many highlights in a single node token
+    # In the current implementation, the last highlight replaces all the text.
+    # to solve this process all nodes from the range at the same time
+    if node_link.node.token:
+        node_link.node.token.content = overlap_text
 
 
 def create_formated_highlights(article_text, highlights):
@@ -273,7 +64,7 @@ def create_formated_highlights(article_text, highlights):
     for node in syntax_tree.walk():
         set_node_status(node, Status.TO_BE_REMOVED)
 
-    status_tree = NodeStatusTree(root_node=syntax_tree)
+    status_tree = StatusTree(root_node=syntax_tree)
 
     node_strings_map = NodeStringMap(root_node=syntax_tree)
 
@@ -282,31 +73,32 @@ def create_formated_highlights(article_text, highlights):
         fuzzy_find_substrings_sequence(node_strings_map.string, highlights)
     )
 
-    matched_node_conections = filter_node_string_connections(
-        node_connections=node_strings_map.connections,
+    # TODO: Investigate problem of missing whitespaces
+    matched_node_conections = filter_node_string_links(
+        node_links=node_strings_map.links,
         filter_ranges=highlihgt_matches_positions,
     )
-    matched_nodes = [
-        node_connection.node for node_connection in matched_node_conections
-    ]
+    matched_nodes = [node_link.node for node_link in matched_node_conections]
 
-    findings = status_tree.find_nodes_with_content("we claim that using")
+    findings = status_tree.find_nodes_with_content("is the enemy of change")
 
     def ascendant_is_heading(node: SyntaxTreeNode):
         return walk_up_find(node, lambda node: node.type == "heading")
+
+    # TODO: Program removes code from some of the headings
 
     num_updated = status_tree.update_status(
         should_update=lambda node: node in matched_nodes,
         new_status=Status.ENABLED,
     )
-    findings = status_tree.find_nodes_with_content("we claim that using")
+    findings = status_tree.find_nodes_with_content("is the enemy of change")
 
     print(f"Updated {num_updated} nodes filter 1")
 
     num_updated = status_tree.update_status(
         should_update=ascendant_is_heading, new_status=Status.ENABLED
     )
-    findings = status_tree.find_nodes_with_content("we claim that using")
+    findings = status_tree.find_nodes_with_content("is the enemy of change")
     print(f"Updated {num_updated} nodes filter 2")
 
     while num_removed := status_tree.perform_removals():
@@ -318,11 +110,3 @@ def create_formated_highlights(article_text, highlights):
     # Ensure that the filtered syntax tree contains only heading nodes
     resulting_markdown = parser.syntax_tree_to_text(syntax_tree)
     return resulting_markdown
-
-    # def partially_matches_highlight(node: SyntaxTreeNode):
-    #     if node.type == "text":
-    #         match = process.extractOne(
-    #             query=node.content, choices=highlights, scorer=fuzz.partial_ratio
-    #         )
-    #         return match and match[1] > FUZZY_MATCH_MIN_SCORE
-    #     return False

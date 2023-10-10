@@ -40,6 +40,7 @@ def untokenize_to_text(tokens):
 SEARCH_WINDOW_FACTOR = 2
 
 
+# TODO: Highlight matching has to be stripped. whitespaces can mean breaks, paragraphs or titles
 def fuzzy_find_substrings_sequence(
     long_string: str, substrings: List[str], raiseErrors=False
 ):
