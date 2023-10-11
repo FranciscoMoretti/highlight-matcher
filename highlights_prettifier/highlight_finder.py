@@ -66,8 +66,8 @@ def fuzzy_find_substrings_sequence(
             else:
                 continue
 
-        # TODO: Extend with range
         smaller_hay = _get_smaller_hay_around_alignment(current_hay, first_alignment)
+        # TODO: Find the max ratio of both algorithms
         max_sim_string = refine_matching_sequences(smaller_hay, substring)
         if not max_sim_string:
             max_sim_string = refine_matching_tokens(smaller_hay, substring)

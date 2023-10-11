@@ -23,8 +23,9 @@ class NodeStringMap:
         for node in root_node.walk():
             if node.type == "text":
                 stringifyied = node.content
+            elif node.type == "softbreak":
+                stringifyied = " "
             elif node.type in [
-                "softbreak",
                 "paragraph",
                 "heading",
                 "td",
@@ -42,7 +43,7 @@ class NodeStringMap:
                 continue
 
             self.string += stringifyied
-            if node.type == "text":
+            if node.type in ["text", "softbreak"]:
                 self.links.append(
                     NodeStringLink(
                         node=node, range=Range(start_pos=start_index, end_pos=end_index)

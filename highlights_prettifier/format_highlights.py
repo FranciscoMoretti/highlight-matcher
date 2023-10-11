@@ -1,7 +1,5 @@
 """Main module."""
-from typing import Callable, List
-from uu import Error
-from dataclasses import dataclass
+from typing import List
 
 from highlights_prettifier.highlight_finder import fuzzy_find_substrings_sequence
 from highlights_prettifier.markdown_parser import MakdownParser
@@ -75,10 +73,10 @@ def create_formated_highlights(article_text, highlights):
     highlihgt_matches_ranges = list(
         fuzzy_find_substrings_sequence(node_strings_map.string, highlights)
     )
-    for range in highlihgt_matches_ranges:
+    for match_range in highlihgt_matches_ranges:
         print(
             "Matched strings: "
-            f"{substring_with_range(string=node_strings_map.string, range=range)}"
+            f"{substring_with_range(string=node_strings_map.string, range=match_range)}"
         )
 
     # TODO: Investigate problem of missing whitespaces
