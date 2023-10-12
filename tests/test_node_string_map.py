@@ -1,7 +1,7 @@
 import pytest
 from markdown_it.tree import SyntaxTreeNode
 from highlights_prettifier.markdown_parser import MakdownParser
-from highlights_prettifier.range import Range, substring_with_range
+from highlights_prettifier.range import Range, substring_by_range
 from highlights_prettifier.node_string_map import (
     NodeStringMap,
 )
@@ -88,7 +88,7 @@ def test_node_string_map(input_md, expected_string, expected_links_content):
     node_string_map = NodeStringMap(syntax_tree)
     assert node_string_map.string == expected_string
     links_content = [
-        substring_with_range(node_string_map.string, link.range)
+        substring_by_range(node_string_map.string, link.range)
         for link in node_string_map.links
     ]
     assert links_content == expected_links_content

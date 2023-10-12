@@ -1,5 +1,5 @@
 import pytest
-from highlights_prettifier.range import substring_with_range
+from highlights_prettifier.range import substring_by_range
 from highlights_prettifier.highlight_finder import (
     fuzzy_find_substrings_sequence,
     refine_matching_sequences,
@@ -34,9 +34,7 @@ def test_fuzzy_find_exact_match():
     long_string = "This is an example of fuzzy matching in Python."
     substrings = ["example  of", "fuzzy matching  in  Python."]
     result_ranges = list(fuzzy_find_substrings_sequence(long_string, substrings))
-    result_string = [
-        substring_with_range(long_string, range) for range in result_ranges
-    ]
+    result_string = [substring_by_range(long_string, range) for range in result_ranges]
     expected = ["example of", "fuzzy matching in Python."]
     assert result_string == expected
 
@@ -69,9 +67,7 @@ expected_result_strings = [
 )
 def test_fuzzy_find_partial_match(long_string, substrings, expected):
     result_ranges = list(fuzzy_find_substrings_sequence(long_string, substrings))
-    result_string = [
-        substring_with_range(long_string, range) for range in result_ranges
-    ]
+    result_string = [substring_by_range(long_string, range) for range in result_ranges]
     assert result_string == expected
 
 

@@ -5,7 +5,7 @@ from uu import Error
 from highlights_prettifier.range import (
     Range,
     extend_substring_range,
-    substring_with_range,
+    substring_by_range,
 )
 from rapidfuzz import fuzz, process, utils
 from nltk.util import ngrams

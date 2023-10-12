@@ -6,7 +6,7 @@ from highlights_prettifier.markdown_parser import MakdownParser
 from highlights_prettifier.node_string_map import NodeStringLink, NodeStringMap
 from highlights_prettifier.status import Status
 from highlights_prettifier.status_tree import StatusTree, set_node_status
-from highlights_prettifier.range import Range, calculate_overlap, substring_with_range
+from highlights_prettifier.range import Range, calculate_overlap, substring_by_range
 from highlights_prettifier.syntax_tree_utils import walk_up_find
 from markdown_it.tree import SyntaxTreeNode
 
@@ -44,7 +44,7 @@ def _filter_node_text_with_range(node_link, overlap_range):
     )
     print(
         "Filtered content: "
-        f"{substring_with_range(node_link.node.content, overlap_relative_to_node)}"
+        f"{substring_by_range(node_link.node.content, overlap_relative_to_node)}"
     )
     overlap_text = node_link.node.content[
         overlap_relative_to_node.start_pos : overlap_relative_to_node.end_pos
@@ -76,7 +76,7 @@ def create_formated_highlights(article_text, highlights):
     for match_range in highlihgt_matches_ranges:
         print(
             "Matched strings: "
-            f"{substring_with_range(string=node_strings_map.string, range=match_range)}"
+            f"{substring_by_range(string=node_strings_map.string, range=match_range)}"
         )
 
     # TODO: Investigate problem of missing whitespaces
@@ -87,7 +87,7 @@ def create_formated_highlights(article_text, highlights):
     for link in matched_node_links:
         print(
             "Matched text: "
-            f"{substring_with_range(string=node_strings_map.string, range=link.range)}"
+            f"{substring_by_range(string=node_strings_map.string, range=link.range)}"
         )
     matched_nodes = [node_link.node for node_link in matched_node_links]
 
