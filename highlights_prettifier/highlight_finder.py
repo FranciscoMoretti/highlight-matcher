@@ -37,7 +37,7 @@ def fuzzy_find_substrings_sequence(
         if len(needle) < min_chars:
             continue
         # Extend window until first alignment
-        first_alignment_range, current_hay = _find_first_alignment_range(
+        first_alignment_range = _find_first_alignment_range(
             long_string, current_start, needle
         )
         if first_alignment_range is None:
@@ -48,9 +48,10 @@ def fuzzy_find_substrings_sequence(
                 continue
 
         refinement_search_range = _get_search_range_around_alignment(
-            current_hay, first_alignment_range
+            long_string, first_alignment_range
         )
-        refinement_hay = substring_by_range(current_hay, refinement_search_range)
+
+        refinement_hay = substring_by_range(long_string, refinement_search_range)
         # TODO: Find the max ratio of both algorithms
         max_sim_string = refine_matching_sequences(refinement_hay, needle)
         if not max_sim_string:
@@ -62,11 +63,13 @@ def fuzzy_find_substrings_sequence(
                 continue
         # Rematch to find the index with the string extracted from current hay
         alignment = fuzz.partial_ratio_alignment(
-            current_hay, max_sim_string, score_cutoff=FUZZY_MATCH_MIN_SCORE
+            s1=substring_by_range(long_string, refinement_search_range),
+            s2=max_sim_string,
+            score_cutoff=FUZZY_MATCH_MIN_SCORE,
         )
         if alignment is not None:
             alignment_range = Range(alignment.src_start, alignment.src_end).offset(
-                current_start
+                refinement_search_range.start_pos
             )
             yield alignment_range
 
@@ -101,14 +104,11 @@ def _find_first_alignment_range(long_string, current_start, substring):
             )
             if not first_alignment:
                 # Give up without finding a match
-                return None, 0
-    return (
-        Range(
-            first_alignment.src_start,
-            first_alignment.src_end,
-        ),
-        current_hay,
-    )
+                return None
+    return Range(
+        first_alignment.src_start,
+        first_alignment.src_end,
+    ).offset(current_start)
 
 
 def _get_search_range_around_alignment(
