@@ -37,17 +37,19 @@ def fuzzy_find_substrings_sequence(
         if len(substring) < min_chars:
             continue
         # Extend window until first alignment
-        first_alignment, current_hay = _find_first_alignment(
+        first_alignment_range, current_hay = _find_first_alignment_range(
             long_string, current_start, substring
         )
-        if first_alignment is None:
+        if first_alignment_range is None:
             # TODO: Fail if no initial alignment
             if raiseErrors:
                 raise Error("First alignment failed")
             else:
                 continue
 
-        smaller_hay = _get_smaller_hay_around_alignment(current_hay, first_alignment)
+        smaller_hay = _get_smaller_hay_around_alignment(
+            current_hay, first_alignment_range
+        )
         # TODO: Find the max ratio of both algorithms
         max_sim_string = refine_matching_sequences(smaller_hay, substring)
         if not max_sim_string:
@@ -69,7 +71,7 @@ def fuzzy_find_substrings_sequence(
             current_start += alignment.src_end
 
 
-def _find_first_alignment(long_string, current_start, substring):
+def _find_first_alignment_range(long_string, current_start, substring):
     window_length = len(substring) * SEARCH_WINDOW_FACTOR
     # TODO: Window selection can be enough to align without having the complete substring
     # A better algorithm needs to be found
@@ -94,15 +96,15 @@ def _find_first_alignment(long_string, current_start, substring):
             if not first_alignment:
                 # Give up without finding a match
                 return None, 0
-    return first_alignment, current_hay
+    return Range(first_alignment.src_start, first_alignment.src_end), current_hay
 
 
-def _get_smaller_hay_around_alignment(current_hay: str, first_alignment):
+def _get_smaller_hay_around_alignment(current_hay: str, alignment_range: Range):
     extended_range = extend_substring_range(
         complete_string_len=len(current_hay),
-        substring_range=Range(first_alignment.src_start, first_alignment.src_end),
+        substring_range=alignment_range,
         extension_length=int(
-            0.2 * (first_alignment.src_end - first_alignment.src_start) + 10
+            0.2 * (alignment_range.end_pos - alignment_range.start_pos) + 10
         ),
     )
     smaller_hay = current_hay[extended_range.start_pos : extended_range.end_pos]
