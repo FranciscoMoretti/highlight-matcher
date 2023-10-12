@@ -33,12 +33,12 @@ def fuzzy_find_substrings_sequence(
     long_string: str, substrings: List[str], raiseErrors=False, min_chars=6
 ):
     current_start = 0
-    for substring in substrings:
-        if len(substring) < min_chars:
+    for needle in substrings:
+        if len(needle) < min_chars:
             continue
         # Extend window until first alignment
         first_alignment_range, current_hay = _find_first_alignment_range(
-            long_string, current_start, substring
+            long_string, current_start, needle
         )
         if first_alignment_range is None:
             # TODO: Fail if no initial alignment
@@ -51,9 +51,9 @@ def fuzzy_find_substrings_sequence(
             current_hay, first_alignment_range
         )
         # TODO: Find the max ratio of both algorithms
-        max_sim_string = refine_matching_sequences(smaller_hay, substring)
+        max_sim_string = refine_matching_sequences(smaller_hay, needle)
         if not max_sim_string:
-            max_sim_string = refine_matching_tokens(smaller_hay, substring)
+            max_sim_string = refine_matching_tokens(smaller_hay, needle)
         if not max_sim_string:
             if raiseErrors:
                 raise Error("Match Refinement Failed but basic alignment worked")
