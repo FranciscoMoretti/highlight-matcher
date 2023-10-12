@@ -38,7 +38,7 @@ markdown_text_4 = """
         (
             "This is\n a test.",
             "This is a test.",
-            ["This is", "a test."],
+            ["This is", " ", "a test."],
         ),
         (
             markdown_text_1,
@@ -47,6 +47,7 @@ markdown_text_4 = """
                 "Lorem Ipsum is ",
                 "simply dummy",
                 " text of the printing",
+                " ",
                 "and typesetting industry.",
             ],
         ),
@@ -66,6 +67,7 @@ markdown_text_4 = """
                 "In Topic 8, ",
                 "\u200b",  # empty whitespace char
                 "The Essence of Good",
+                " ",
                 "Design",
                 "\u200b",
                 " we claim",
