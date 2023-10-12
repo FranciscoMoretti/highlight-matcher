@@ -37,28 +37,9 @@ def fuzzy_find_substrings_sequence(
         if len(substring) < min_chars:
             continue
         # Extend window until first alignment
-        window_length = len(substring) * SEARCH_WINDOW_FACTOR
-        first_alignment = None
-        current_end = current_start
-        current_hay = ""
-        while first_alignment is None:
-            current_end = min(current_end + window_length, len(long_string))
-            current_hay = long_string[current_start:current_end]
-            first_alignment = fuzz.partial_ratio_alignment(
-                current_hay,
-                substring,
-                score_cutoff=FUZZY_APROXIMATION_MIN_SCORE,
-            )
-            if first_alignment is None and current_end == len(long_string):
-                # Reached the end without finding, try being more permisive
-                first_alignment = fuzz.partial_ratio_alignment(
-                    current_hay,
-                    substring,
-                    score_cutoff=FUZZY_APROXIMATION_MIN_SCORE - 10,
-                )
-                if not first_alignment:
-                    # Give up without finding a match
-                    break
+        first_alignment, current_hay = _find_first_alignment(
+            long_string, current_start, substring
+        )
         if first_alignment is None:
             # TODO: Fail if no initial alignment
             if raiseErrors:
@@ -86,6 +67,34 @@ def fuzzy_find_substrings_sequence(
                 end_pos=current_start + alignment.src_end,
             )
             current_start += alignment.src_end
+
+
+def _find_first_alignment(long_string, current_start, substring):
+    window_length = len(substring) * SEARCH_WINDOW_FACTOR
+    # TODO: Window selection can be enough to align without having the complete substring
+    # A better algorithm needs to be found
+    first_alignment = None
+    current_end = current_start
+    current_hay = ""
+    while first_alignment is None:
+        current_end = min(current_end + window_length, len(long_string))
+        current_hay = long_string[current_start:current_end]
+        first_alignment = fuzz.partial_ratio_alignment(
+            current_hay,
+            substring,
+            score_cutoff=FUZZY_APROXIMATION_MIN_SCORE,
+        )
+        if first_alignment is None and current_end == len(long_string):
+            # Reached the end without finding, try being more permisive
+            first_alignment = fuzz.partial_ratio_alignment(
+                current_hay,
+                substring,
+                score_cutoff=FUZZY_APROXIMATION_MIN_SCORE - 10,
+            )
+            if not first_alignment:
+                # Give up without finding a match
+                return None, 0
+    return first_alignment, current_hay
 
 
 def _get_smaller_hay_around_alignment(current_hay: str, first_alignment):
