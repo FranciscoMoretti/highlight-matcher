@@ -30,7 +30,7 @@ SEARCH_WINDOW_FACTOR = 2
 
 # TODO: Highlight matching has to be stripped. whitespaces can mean breaks, paragraphs or titles
 def fuzzy_find_substrings_sequence(
-    long_string: str, substrings: List[str], raiseErrors=False, min_chars=6
+    long_string: str, substrings: List[str], raise_errors=False, min_chars=6
 ):
     current_start = 0
     for needle in substrings:
@@ -42,7 +42,7 @@ def fuzzy_find_substrings_sequence(
         )
         if first_alignment_range is None:
             # TODO: Fail if no initial alignment
-            if raiseErrors:
+            if raise_errors:
                 raise Error("First alignment failed")
             else:
                 continue
@@ -54,7 +54,7 @@ def fuzzy_find_substrings_sequence(
             hay=substring_by_range(long_string, refinement_search_range), needle=needle
         )
         if not refined_match_string:
-            if raiseErrors:
+            if raise_errors:
                 raise Error("Match Refinement Failed but basic alignment worked")
             else:
                 continue
