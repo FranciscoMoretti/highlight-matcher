@@ -35,13 +35,13 @@ def fuzzy_find_substrings_sequence(
     current_start = 0
     for needle in substrings:
         if len(needle) < min_chars:
+            # TODO: say highlight to short and report
             continue
         # Extend window until first alignment
         first_alignment_range = _find_first_alignment_range(
             long_string, current_start, needle
         )
         if first_alignment_range is None:
-            # TODO: Fail if no initial alignment
             if raise_errors:
                 raise Error("First alignment failed")
             else:
@@ -98,7 +98,6 @@ def _find_first_alignment_range(long_string, current_start, substring):
     # A better algorithm needs to be found
     first_alignment = None
     search_range = Range(start_pos=current_start, end_pos=current_start)
-    current_hay = ""
     while first_alignment is None:
         # Extend the search end limit
         search_range.end_pos = min(
