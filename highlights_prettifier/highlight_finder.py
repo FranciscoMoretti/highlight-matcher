@@ -39,7 +39,7 @@ def fuzzy_find_substrings_sequence(
             continue
         # Extend window until first alignment
         first_alignment_range = _find_first_alignment_range(
-            long_string, current_start, needle
+            long_string, needle, current_start
         )
         if first_alignment_range is None:
             if raise_errors:
@@ -92,38 +92,67 @@ def _get_full_alignment_range(string, substring):
     return None
 
 
-def _find_first_alignment_range(long_string, current_start, substring):
-    window_length = len(substring) * SEARCH_WINDOW_FACTOR
+def _find_first_alignment_range(long_string, substring, current_start=0):
+    search_range = Range(start_pos=current_start, end_pos=current_start)
     # TODO: Window selection can be enough to align without having the complete substring
     # A better algorithm needs to be found
-    first_alignment = None
-    search_range = Range(start_pos=current_start, end_pos=current_start)
-    while first_alignment is None:
+    window_length = len(substring) * SEARCH_WINDOW_FACTOR
+    partial_alignment_range = None
+    while partial_alignment_range is None:
         # Extend the search end limit
         search_range.end_pos = min(
             search_range.end_pos + window_length, len(long_string)
         )
 
-        current_hay = substring_by_range(long_string, search_range)
-        first_alignment = fuzz.partial_ratio_alignment(
-            current_hay,
-            substring,
+        partial_alignment_range = _get_alignment_range_in_search_range(
+            hay=long_string,
+            needle=substring,
+            search_range=search_range,
             score_cutoff=FUZZY_APROXIMATION_MIN_SCORE,
         )
-        if first_alignment is None and search_range.end_pos == len(long_string):
+        if partial_alignment_range is None and search_range.end_pos == len(long_string):
             # Reached the end without finding, try being more permisive
-            first_alignment = fuzz.partial_ratio_alignment(
-                current_hay,
-                substring,
+            partial_alignment_range = _get_alignment_range_in_search_range(
+                hay=substring_by_range(long_string, search_range),
+                needle=substring,
+                search_range=search_range,
                 score_cutoff=FUZZY_APROXIMATION_MIN_SCORE - 10,
             )
-            if not first_alignment:
+            if not partial_alignment_range:
                 # Give up without finding a match
                 return None
-    return Range(
-        first_alignment.src_start,
-        first_alignment.src_end,
-    ).offset(current_start)
+    # Search again around the alignment to prevent boundary conditions
+    # E.g. matching string missing one character because it search range end cut off
+    search_range_around_partial_alignment = extend_substring_range(
+        complete_string_len=len(long_string),
+        extension_length=len(substring),
+        substring_range=partial_alignment_range,
+    )
+
+    complete_alignment_range = _get_alignment_range_in_search_range(
+        hay=long_string,
+        needle=substring,
+        search_range=search_range_around_partial_alignment,
+        score_cutoff=FUZZY_APROXIMATION_MIN_SCORE,
+    )
+
+    return complete_alignment_range
+
+
+def _get_alignment_range_in_search_range(
+    hay, needle, search_range: Range, score_cutoff: float
+):
+    alignment = fuzz.partial_ratio_alignment(
+        substring_by_range(hay, search_range),
+        needle,
+        score_cutoff=score_cutoff,
+    )
+    if alignment:
+        return Range(
+            alignment.src_start,
+            alignment.src_end,
+        ).offset(search_range.start_pos)
+    return None
 
 
 def _get_search_range_around_alignment(
