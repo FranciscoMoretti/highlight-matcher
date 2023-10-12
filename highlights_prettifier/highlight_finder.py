@@ -50,12 +50,9 @@ def fuzzy_find_substrings_sequence(
         refinement_search_range = _get_search_range_around_alignment(
             long_string, first_alignment_range
         )
-
-        refinement_hay = substring_by_range(long_string, refinement_search_range)
-        # TODO: Find the max ratio of both algorithms
-        refined_match_string = refine_matching_sequences(refinement_hay, needle)
-        if not refined_match_string:
-            refined_match_string = refine_matching_tokens(refinement_hay, needle)
+        refined_match_string = _extract_refined_match_string(
+            hay=substring_by_range(long_string, refinement_search_range), needle=needle
+        )
         if not refined_match_string:
             if raiseErrors:
                 raise Error("Match Refinement Failed but basic alignment worked")
@@ -71,6 +68,17 @@ def fuzzy_find_substrings_sequence(
             yield alignment_range
 
             current_start = alignment_range.end_pos
+
+
+def _extract_refined_match_string(
+    hay,
+    needle,
+):
+    # TODO: Find the max ratio of both algorithms
+    refined_match_string = refine_matching_sequences(hay, needle)
+    if not refined_match_string:
+        refined_match_string = refine_matching_tokens(hay, needle)
+    return refined_match_string
 
 
 def _get_full_alignment_range(string, substring):
