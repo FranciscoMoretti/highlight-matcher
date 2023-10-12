@@ -10,16 +10,15 @@ from highlights_prettifier.highlight_finder import (
 
 def test_find_substring_positions():
     long_string = "This is a long string with some substrings."
-    substrings = ["long", "with", "substrings"]
+    expected_substrings = ["long", "with", "substrings."]
     positions = list(
-        fuzzy_find_substrings_sequence(long_string, substrings, min_chars=4)
+        fuzzy_find_substrings_sequence(long_string, expected_substrings, min_chars=4)
     )
-
-    assert substrings == [
-        long_string[positions[0].start_pos : positions[0].end_pos],
-        long_string[positions[1].start_pos : positions[1].end_pos],
-        long_string[positions[2].start_pos : positions[2].end_pos],
+    found_substrings = [
+        substring_by_range(long_string, sub_range) for sub_range in positions
     ]
+
+    assert expected_substrings == found_substrings
 
 
 def test_no_match():
