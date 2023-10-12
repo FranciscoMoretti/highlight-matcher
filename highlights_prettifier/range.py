@@ -7,6 +7,11 @@ class Range:
     start_pos: int
     end_pos: int
 
+    def offset(self, offset_value: int) -> "Range":
+        new_start = self.start_pos + offset_value
+        new_end = self.end_pos + offset_value
+        return Range(new_start, new_end)
+
 
 def calculate_overlap(range1: Range, range2: Range) -> Optional[Range]:
     """

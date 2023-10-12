@@ -76,17 +76,21 @@ def _find_first_alignment_range(long_string, current_start, substring):
     # TODO: Window selection can be enough to align without having the complete substring
     # A better algorithm needs to be found
     first_alignment = None
-    current_end = current_start
+    search_range = Range(start_pos=current_start, end_pos=current_start)
     current_hay = ""
     while first_alignment is None:
-        current_end = min(current_end + window_length, len(long_string))
-        current_hay = long_string[current_start:current_end]
+        # Extend the search end limit
+        search_range.end_pos = min(
+            search_range.end_pos + window_length, len(long_string)
+        )
+
+        current_hay = substring_by_range(long_string, search_range)
         first_alignment = fuzz.partial_ratio_alignment(
             current_hay,
             substring,
             score_cutoff=FUZZY_APROXIMATION_MIN_SCORE,
         )
-        if first_alignment is None and current_end == len(long_string):
+        if first_alignment is None and search_range.end_pos == len(long_string):
             # Reached the end without finding, try being more permisive
             first_alignment = fuzz.partial_ratio_alignment(
                 current_hay,
@@ -96,7 +100,13 @@ def _find_first_alignment_range(long_string, current_start, substring):
             if not first_alignment:
                 # Give up without finding a match
                 return None, 0
-    return Range(first_alignment.src_start, first_alignment.src_end), current_hay
+    return (
+        Range(
+            first_alignment.src_start,
+            first_alignment.src_end,
+        ),
+        current_hay,
+    )
 
 
 def _get_smaller_hay_around_alignment(current_hay: str, alignment_range: Range):
