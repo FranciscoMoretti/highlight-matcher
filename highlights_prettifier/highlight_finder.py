@@ -8,7 +8,7 @@ from highlights_prettifier.range import (
     substring_by_range,
 )
 from rapidfuzz import fuzz, process, utils
-from nltk.util import ngrams
+from nltk.util import ngrams, everygrams
 
 FUZZY_MATCH_MIN_SCORE = 90
 FUZZY_APROXIMATION_MIN_SCORE = 80
@@ -50,7 +50,7 @@ def fuzzy_find_substrings_sequence(
         refinement_search_range = _get_search_range_around_alignment(
             long_string, first_alignment_range
         )
-        refined_match_string = _extract_refined_match_string(
+        refined_match_string = extract_refined_match(
             hay=substring_by_range(long_string, refinement_search_range), needle=needle
         )
         if not refined_match_string:
@@ -70,14 +70,14 @@ def fuzzy_find_substrings_sequence(
             current_start = alignment_range.end_pos
 
 
-def _extract_refined_match_string(
+def extract_refined_match(
     hay,
     needle,
 ):
     # TODO: Find the max ratio of both algorithms
-    refined_match_string = refine_matching_sequences(hay, needle)
+    refined_match_string = refine_matching_tokens(hay, needle)
     if not refined_match_string:
-        refined_match_string = refine_matching_tokens(hay, needle)
+        refined_match_string = refine_matching_sequences(hay, needle)
     return refined_match_string
 
 
@@ -169,19 +169,25 @@ def _get_search_range_around_alignment(
 
 
 def refine_matching_tokens(current_hay, substring):
-    needle_length = len(substring.split())
+    needle_tokens = tokenize_from_text(substring)
+    hay_tokens = tokenize_from_text(current_hay)
     max_sim_val = 0
     max_sim_string = ""
-    hay_tokens = tokenize_from_text(current_hay)
 
-    # Todo consider less grams length
-    for ngram in ngrams(hay_tokens, min(needle_length, len(hay_tokens))):
+    # TODO: Improve it by using relative bloats
+    for ngram in everygrams(
+        hay_tokens,
+        min_len=min(len(needle_tokens) - 2, len(hay_tokens)),
+        max_len=max(len(needle_tokens) + 5, len(hay_tokens)),
+    ):
         hay_ngram = untokenize_to_text(ngram)
         # similarity = SM(None, hay_ngram, substring).ratio()
         similarity = fuzz.token_ratio(hay_ngram, substring)
         if similarity > max_sim_val and similarity > FUZZY_MATCH_MIN_SCORE:
             max_sim_val = similarity
             max_sim_string = hay_ngram
+    if not max_sim_string:
+        print(f"Couldn't match the following {[current_hay, substring]}")
     return max_sim_string
 
 

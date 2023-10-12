@@ -22,11 +22,11 @@ def remove_trailing_newlines(highlights):
 
 
 def extract_text_highlights(input_text):
-    # Split the input text into highlights using regular expressions
-    pattern = r"\(.*?\)\n\n"
+    # Split the text into strings separated by empty lines
+    split_strings = re.split(r"\n\s*\n", input_text)
 
-    # Use re.findall to find all matches of the pattern in the input text
-    highlights = re.split(pattern, input_text)
+    # Clean up the split strings by removing leading and trailing whitespace
+    highlights = [s.strip() for s in split_strings if s.strip()]
 
     # Remove the location links and leading/trailing whitespace from each match
     highlights = remove_location_links(highlights)
