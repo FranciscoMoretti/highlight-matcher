@@ -64,11 +64,12 @@ def fuzzy_find_substrings_sequence(
             current_hay, max_sim_string, score_cutoff=FUZZY_MATCH_MIN_SCORE
         )
         if alignment is not None:
-            yield Range(
-                start_pos=current_start + alignment.src_start,
-                end_pos=current_start + alignment.src_end,
+            alignment_range = Range(alignment.src_start, alignment.src_end).offset(
+                current_start
             )
-            current_start += alignment.src_end
+            yield alignment_range
+
+            current_start = alignment_range.end_pos
 
 
 def _find_first_alignment_range(long_string, current_start, substring):
