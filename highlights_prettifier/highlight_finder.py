@@ -47,13 +47,14 @@ def fuzzy_find_substrings_sequence(
             else:
                 continue
 
-        smaller_hay = _get_smaller_hay_around_alignment(
+        refinement_search_range = _get_search_range_around_alignment(
             current_hay, first_alignment_range
         )
+        refinement_hay = substring_by_range(current_hay, refinement_search_range)
         # TODO: Find the max ratio of both algorithms
-        max_sim_string = refine_matching_sequences(smaller_hay, needle)
+        max_sim_string = refine_matching_sequences(refinement_hay, needle)
         if not max_sim_string:
-            max_sim_string = refine_matching_tokens(smaller_hay, needle)
+            max_sim_string = refine_matching_tokens(refinement_hay, needle)
         if not max_sim_string:
             if raiseErrors:
                 raise Error("Match Refinement Failed but basic alignment worked")
@@ -110,7 +111,9 @@ def _find_first_alignment_range(long_string, current_start, substring):
     )
 
 
-def _get_smaller_hay_around_alignment(current_hay: str, alignment_range: Range):
+def _get_search_range_around_alignment(
+    current_hay: str, alignment_range: Range
+) -> Range:
     extended_range = extend_substring_range(
         complete_string_len=len(current_hay),
         substring_range=alignment_range,
@@ -118,9 +121,7 @@ def _get_smaller_hay_around_alignment(current_hay: str, alignment_range: Range):
             0.2 * (alignment_range.end_pos - alignment_range.start_pos) + 10
         ),
     )
-    smaller_hay = current_hay[extended_range.start_pos : extended_range.end_pos]
-
-    return smaller_hay
+    return extended_range
 
 
 def refine_matching_tokens(current_hay, substring):
