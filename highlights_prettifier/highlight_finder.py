@@ -11,7 +11,7 @@ from rapidfuzz import fuzz, process, utils
 from nltk.util import ngrams, everygrams
 
 FUZZY_MATCH_MIN_SCORE = 90
-FUZZY_APROXIMATION_MIN_SCORE = 80
+FUZZY_APROXIMATION_MIN_SCORE = 85
 
 
 def tokenize_from_text(text):
