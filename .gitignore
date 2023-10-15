@@ -102,8 +102,11 @@ ENV/
 .mypy_cache/
 
 # IDE settings
-.vscode/
+# .vscode/
 .idea/
 
 # data folder with personal documents
 data
+
+
+websites
