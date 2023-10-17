@@ -10,13 +10,13 @@ def save_markdown_to_file(markdown, output_file):
 
 
 if __name__ == "__main__":
-    article_file_path = "data/markdown_ebook.md"
-    output_file = "data/output.html"  # Then transform to MD with pandoc
-    input_file = "data/input.md"
+    article_file_path = "data/PragmaticProgrammer/article.md"
+    output_file = "data/PragmaticProgrammer/output.html"  # Then transform to MD with pandoc
+    highlights_file = "data/PragmaticProgrammer/highlights.md"
     # Read input from the input.md file
     input_text = ""
     article_text = ""
-    with open(input_file, "r", encoding="utf-8") as file:
+    with open(highlights_file, "r", encoding="utf-8") as file:
         input_text = file.read()
         normalized_highlights_text = unicodedata.normalize("NFKD", input_text).replace(
             "\u200b", ""
