@@ -6,6 +6,8 @@ from parse_highlights import get_highlights_from_raw_text
 from pathlib import Path
 import pypandoc
 
+# from ebooklib import epub
+
 
 def save_to_file(markdown, output_file):
     with open(output_file, "w", encoding="utf-8") as f:
@@ -24,6 +26,9 @@ if __name__ == "__main__":
     # Read input from the input.md file
     input_text = ""
     article_text = ""
+
+    # TODO: Extract and infer titles from table of contents
+    # book = epub.read_epub(article_epub_file_path)
     with open(highlights_file, "r", encoding="utf-8") as file:
         input_text = file.read()
         normalized_highlights_text = unicodedata.normalize("NFKD", input_text).replace(
