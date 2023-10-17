@@ -12,7 +12,7 @@ class MarkdownParser:
 
     def __init__(self):
         self.mdit = MarkdownIt("gfm-like")
-        # TODO Parse github markdown better?
+        # TODO: Parse github markdown better?
         self.env = {}
 
     def text_to_tokens(self, text) -> List[Token]:
