@@ -1,6 +1,5 @@
 from typing import Callable
 from uu import Error
-from attr import dataclass
 from dataclasses import dataclass
 
 from highlights_prettifier.status import Status

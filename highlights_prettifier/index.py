@@ -1,18 +1,26 @@
 """Main module."""
+import sys
 import unicodedata
 from format_highlights import create_formated_highlights
 from parse_highlights import get_highlights_from_raw_text
+from pathlib import Path
+import pypandoc
 
 
-def save_markdown_to_file(markdown, output_file):
+def save_to_file(markdown, output_file):
     with open(output_file, "w", encoding="utf-8") as f:
         f.write(markdown)
 
 
+FILES_DIR = "data/PragmaticProgrammer"
+
+
 if __name__ == "__main__":
-    article_file_path = "data/PragmaticProgrammer/article.md"
-    output_file = "data/PragmaticProgrammer/output.html"  # Then transform to MD with pandoc
-    highlights_file = "data/PragmaticProgrammer/highlights.md"
+    article_epub_file_path = FILES_DIR + "/article.epub"
+    article_md_file_path = FILES_DIR + "/article.md"
+    output_html_file = FILES_DIR + "/output.html"
+    highlights_file = FILES_DIR + "/highlights.md"
+    output_md_file = FILES_DIR + "/output.md"
     # Read input from the input.md file
     input_text = ""
     article_text = ""
@@ -21,16 +29,36 @@ if __name__ == "__main__":
         normalized_highlights_text = unicodedata.normalize("NFKD", input_text).replace(
             "\u200b", ""
         )
-    with open(article_file_path, "r", encoding="utf-8") as file:
+    if not Path(article_md_file_path).exists():
+        if Path(article_epub_file_path).exists():
+            output = pypandoc.convert_file(
+                source_file=article_epub_file_path,
+                format="epub",
+                outputfile=article_md_file_path,
+                to="gfm",
+            )
+        else:
+            print(
+                f"Article file doesn't exist at provided path {article_epub_file_path}"
+            )
+            sys.exit()
+
+    with open(article_md_file_path, "r", encoding="utf-8") as file:
         article_text = file.read()
         normalized_article_text = unicodedata.normalize("NFKD", article_text).replace(
             "\u200b", ""
         )
 
     highlights = get_highlights_from_raw_text(normalized_highlights_text)
-    formatted_highlights = create_formated_highlights(
+    formatted_highlights_html = create_formated_highlights(
         normalized_article_text, highlights
     )
-    save_markdown_to_file(formatted_highlights, output_file)
+    save_to_file(formatted_highlights_html, output_html_file)
+    formatted_highlights_md = pypandoc.convert_text(
+        source=formatted_highlights_html,
+        format="html",
+        to="gfm",
+    )
+    save_to_file(formatted_highlights_md, output_md_file)
 
-    print(f"Formatted highlights saved to {output_file}")
+    print(f"Formatted highlights saved to {output_md_file}")
