@@ -1,8 +1,8 @@
 """Main module."""
 import sys
 import unicodedata
-from format_highlights import create_formated_highlights
-from parse_highlights import get_highlights_from_raw_text
+from highlights_prettifier.format_highlights import create_formated_highlights
+from highlights_prettifier.parse_highlights import get_highlights_from_raw_text
 from pathlib import Path
 import pypandoc
 

@@ -1,5 +1,4 @@
 import difflib
-import re
 from typing import List
 from uu import Error
 from highlights_prettifier.range import (
