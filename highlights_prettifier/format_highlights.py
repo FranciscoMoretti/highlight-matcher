@@ -1,14 +1,21 @@
 """Main module."""
 from typing import List
 
-from highlights_prettifier.highlight_finder import fuzzy_find_substrings_sequence
+from markdown_it.tree import SyntaxTreeNode
+
+from highlights_prettifier.highlight_finder import (
+    fuzzy_find_substrings_sequence,
+)
 from highlights_prettifier.markdown_parser import MakdownParser
 from highlights_prettifier.node_string_map import NodeStringLink, NodeStringMap
+from highlights_prettifier.range import (
+    Range,
+    calculate_overlap,
+    substring_by_range,
+)
 from highlights_prettifier.status import Status
 from highlights_prettifier.status_tree import StatusTree, set_node_status
-from highlights_prettifier.range import Range, calculate_overlap, substring_by_range
 from highlights_prettifier.syntax_tree_utils import walk_up_find
-from markdown_it.tree import SyntaxTreeNode
 
 
 def filter_node_string_links(

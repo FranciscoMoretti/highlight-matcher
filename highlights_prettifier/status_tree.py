@@ -1,12 +1,11 @@
+from dataclasses import dataclass
 from typing import Callable
 from uu import Error
-from dataclasses import dataclass
-
-from highlights_prettifier.status import Status
 
 from markdown_it.tree import SyntaxTreeNode
 
-from highlights_prettifier.syntax_tree_utils import walk_up_find, walk_up_find_node
+from highlights_prettifier.status import Status
+from highlights_prettifier.syntax_tree_utils import walk_up_find_node
 
 
 def node_has_status(node: SyntaxTreeNode):

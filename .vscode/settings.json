@@ -1,6 +1,13 @@
 {
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": "ms-python.black-formatter"
-}
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll": true,  // RUFF Safe fixes
+          "source.organizeImports": true // RUFF sort imports
+
+        },
+        "editor.defaultFormatter": "ms-python.black-formatter"
+      }
+    }

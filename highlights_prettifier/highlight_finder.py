@@ -1,13 +1,15 @@
 import difflib
 from typing import List
 from uu import Error
+
+from nltk.util import everygrams
+from rapidfuzz import fuzz, utils
+
 from highlights_prettifier.range import (
     Range,
     extend_substring_range,
     substring_by_range,
 )
-from rapidfuzz import fuzz, process, utils
-from nltk.util import ngrams, everygrams
 
 FUZZY_MATCH_MIN_SCORE = 90
 FUZZY_APROXIMATION_MIN_SCORE = 85

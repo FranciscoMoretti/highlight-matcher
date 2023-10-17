@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from itertools import tee
+
 from markdown_it.tree import SyntaxTreeNode
 
 from highlights_prettifier.range import Range

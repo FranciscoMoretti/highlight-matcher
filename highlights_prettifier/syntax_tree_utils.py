@@ -1,4 +1,5 @@
 from typing import Any, Callable
+
 from markdown_it.tree import SyntaxTreeNode
 
 
