@@ -5,7 +5,7 @@ from markdown_it.token import Token
 from markdown_it.tree import SyntaxTreeNode
 
 
-class MakdownParser:
+class MarkdownParser:
     """
     docstring
     """

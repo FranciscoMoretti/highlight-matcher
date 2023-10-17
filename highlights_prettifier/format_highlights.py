@@ -6,7 +6,7 @@ from markdown_it.tree import SyntaxTreeNode
 from highlights_prettifier.highlight_finder import (
     fuzzy_find_substrings_sequence,
 )
-from highlights_prettifier.markdown_parser import MakdownParser
+from highlights_prettifier.markdown_parser import MarkdownParser
 from highlights_prettifier.node_string_map import NodeStringLink, NodeStringMap
 from highlights_prettifier.range import (
     Range,
@@ -66,7 +66,7 @@ def _filter_node_text_with_range(node_link, overlap_range):
 
 def create_formated_highlights(article_text, highlights):
     # Create a dummy root node to hold the filtered nodes
-    parser = MakdownParser()
+    parser = MarkdownParser()
     tokens = parser.text_to_tokens(article_text)
     syntax_tree = parser.tokens_to_syntax_tree(tokens)
 

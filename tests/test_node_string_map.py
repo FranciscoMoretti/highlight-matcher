@@ -1,11 +1,10 @@
 import pytest
-from markdown_it.tree import SyntaxTreeNode
-from highlights_prettifier.markdown_parser import MakdownParser
-from highlights_prettifier.range import Range, substring_by_range
+
+from highlights_prettifier.markdown_parser import MarkdownParser
 from highlights_prettifier.node_string_map import (
     NodeStringMap,
 )
-
+from highlights_prettifier.range import substring_by_range
 
 markdown_text_1 = """
 Lorem Ipsum is **simply dummy** text of the printing
@@ -81,7 +80,7 @@ markdown_text_4 = """
     ],
 )
 def test_node_string_map(input_md, expected_string, expected_links_content):
-    parser = MakdownParser()
+    parser = MarkdownParser()
     tokens = parser.text_to_tokens(input_md)
     syntax_tree = parser.tokens_to_syntax_tree(tokens)
 
