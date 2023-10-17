@@ -1,0 +1,4 @@
+nltk
+thefuzz
+markdown-it-py
+linkify_it_py
