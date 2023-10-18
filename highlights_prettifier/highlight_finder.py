@@ -183,7 +183,7 @@ def refine_matching_tokens(current_hay, substring):
     ):
         hay_ngram = untokenize_to_text(ngram)
         # similarity = SM(None, hay_ngram, substring).ratio()
-        similarity = fuzz.token_ratio(hay_ngram, substring)
+        similarity = fuzz.ratio(hay_ngram, substring)
         if similarity > max_sim_val and similarity > FUZZY_MATCH_MIN_SCORE:
             max_sim_val = similarity
             max_sim_string = hay_ngram
