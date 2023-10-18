@@ -30,6 +30,13 @@ markdown_text_4 = """
 | Tip 14 | Good Design Is Easier to Change Than Bad Design |
 """
 
+markdown_text_5 = """
+
+  - Stay current  
+    Read news and posts online on technology different from that of your
+    current project.
+"""
+
 
 @pytest.mark.parametrize(
     "input_md, expected_string, expected_links_content",
@@ -76,6 +83,17 @@ markdown_text_4 = """
             markdown_text_4,
             "Tip 14 Good Design Is Easier to Change Than Bad Design",
             ["Tip 14", "Good Design Is Easier to Change Than Bad Design"],
+        ),
+        (
+            markdown_text_5,
+            "Stay current Read news and posts online on technology different from that of your current project.",
+            [
+                "Stay current",
+                " ",
+                "Read news and posts online on technology different from that of your",
+                " ",
+                "current project.",
+            ],
         ),
     ],
 )
