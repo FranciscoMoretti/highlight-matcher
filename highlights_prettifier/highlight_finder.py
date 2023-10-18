@@ -1,9 +1,9 @@
-import difflib
 from typing import List
 from uu import Error
+import difflib
 
 from nltk.util import everygrams
-from rapidfuzz import fuzz, utils
+from rapidfuzz import fuzz, process
 
 from highlights_prettifier.range import (
     Range,
@@ -172,28 +172,33 @@ def _get_search_range_around_alignment(
 def refine_matching_tokens(current_hay, substring):
     needle_tokens = tokenize_from_text(substring)
     hay_tokens = tokenize_from_text(current_hay)
-    max_sim_val = 0
     max_sim_string = ""
 
     # TODO: Improve it by using relative bloats
-    for ngram in everygrams(
-        hay_tokens,
-        min_len=min(len(needle_tokens) - 2, len(hay_tokens)),
-        max_len=max(len(needle_tokens) + 5, len(hay_tokens)),
-    ):
-        hay_ngram = untokenize_to_text(ngram)
-        # similarity = SM(None, hay_ngram, substring).ratio()
-        similarity = fuzz.ratio(hay_ngram, substring)
-        if similarity > max_sim_val and similarity > FUZZY_MATCH_MIN_SCORE:
-            max_sim_val = similarity
-            max_sim_string = hay_ngram
+    hay_candidates = [
+        untokenize_to_text(ngram)
+        for ngram in everygrams(
+            hay_tokens,
+            min_len=min(len(needle_tokens) - 2, len(hay_tokens)),
+            max_len=max(len(needle_tokens) + 5, len(hay_tokens)),
+        )
+    ]
+
+    best_match = process.extractOne(substring, hay_candidates, scorer=fuzz.ratio)
+
+    if best_match and best_match[1] > FUZZY_MATCH_MIN_SCORE:
+        max_sim_string = best_match[0]
     if not max_sim_string:
+        best_matches = process.extract(
+            substring, hay_candidates, scorer=fuzz.ratio, limit=3
+        )
         print(f"Couldn't match the following {[current_hay, substring]}")
+        print(f"Best matches: {best_matches}")
     return max_sim_string
 
 
-def preprocess(seq):
-    return utils.default_process(str(seq))
+# def preprocess(seq):
+#     return utils.default_process(str(seq))
 
 
 def refine_matching_sequences(hay, needle):
