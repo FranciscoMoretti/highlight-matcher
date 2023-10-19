@@ -1,11 +1,10 @@
 import pytest
 from highlights_prettifier.range import substring_by_range
-from highlights_prettifier.highlight_finder import (
+from highlights_prettifier.fuzzy_find_substrings_sequence import (
     fuzzy_find_substrings_sequence,
-    refine_matching_sequences,
-    refine_matching_tokens,
-    tokenize_from_text,
+    refine_matching,
 )
+from highlights_prettifier.refine_matching import tokenize_from_text
 
 
 def test_find_substring_positions():
@@ -98,36 +97,20 @@ def test_tokenization():
             " This means there's a simple principle you should follow: Tip 44   Decoupled Code Is Easier to Change Given that we don't normally code using steel beams and rivets, just what does it mean to decouple code? In this section we'll talk about: Train wrecks---chains of method calls Globalization---the dangers of static things Inheritance---why subclassing is dangerous To some extent this list is artificial: coupling can occur just about any time two pieces of code share something, so as you read what follows keep an eye out for the underlying patterns so you can apply them to [your]{.emph} code. And keep a lookout for some of the symptoms of coupling: Wacky dependencies between unrelated modules or libraries. \"Simple\" changes to one module that propagate through unrelated modules in the system or break stuff elsewhere in the system. Developers who are afraid to change code because they aren't sure what might be affected. Meetings where everyone has to attend because no one is sure who will be affected by a change. Train Wrecks We've all seen (and probably written) code like this: \u200b[\xa0]{.codeprefix}   \u200b public \u200b \u200b void \u200b applyDiscount(customer, order_id, discount) { \u200b[\xa0]{.codeprefix}   totals = customer \u200b[",
             "Tip 44 Decoupled Code Is Easier to Change Given that we don’t normally code using steel beams and rivets, just what does it mean to decouple code? In this section we’ll talk about: Train wrecks—chains of method calls Globalization—the dangers of static things Inheritance—why subclassing is dangerous To some extent this list is artificial: coupling can occur just about any time two pieces of code share something, so as you read what follows keep an eye out for the underlying patterns so you can apply them to your code. And keep a lookout for some of the symptoms of coupling: Wacky dependencies between unrelated modules or libraries. “Simple” changes to one module that propagate through unrelated modules in the system or break stuff elsewhere in the system. Developers who are afraid to change code because they aren’t sure what might be affected. Meetings where everyone has to attend because no one is sure who will be affected by a change.",
             "Tip 44 Decoupled Code Is Easier to Change Given that we don't normally code using steel beams and rivets, just what does it mean to decouple code? In this section we'll talk about: Train wrecks---chains of method calls Globalization---the dangers of static things Inheritance---why subclassing is dangerous To some extent this list is artificial: coupling can occur just about any time two pieces of code share something, so as you read what follows keep an eye out for the underlying patterns so you can apply them to [your]{.emph} code. And keep a lookout for some of the symptoms of coupling: Wacky dependencies between unrelated modules or libraries. \"Simple\" changes to one module that propagate through unrelated modules in the system or break stuff elsewhere in the system. Developers who are afraid to change code because they aren't sure what might be affected. Meetings where everyone has to attend because no one is sure who will be affected by a change.",
+        ),
+        (
+            " We discuss Tell, Don't Ask in o",
+            "Tell, Don’t Ask",
+            "Tell, Don't Ask",
+        ),
+        (
+            "We We We discuss Tell, Don't Ask in o o o",
+            "We discuss Tell, Don't Ask in",
+            "We discuss Tell, Don't Ask in",
         )
         # Add more test cases as needed
     ],
 )
 def test_refine_match_matching_tokens(hay, needle, expected):
-    result = refine_matching_tokens(hay, needle)
-    assert result == expected
-
-
-@pytest.mark.parametrize(
-    "hay, needle, expected",
-    [
-        (
-            " We discuss [Tell, Don't Ask]{.emph} in o",
-            "Tell, Don’t Ask",
-            "Tell, Don't Ask",
-        ),
-        (
-            " We discuss [Tell, Don't Ask]{.emph} in o",
-            "We discuss Tell, Don't Ask in",
-            "We discuss [Tell, Don't Ask]{.emph} in",
-        ),
-        (
-            "We We We discuss [Tell, Don't Ask]{.emph} in o o o",
-            "We discuss Tell, Don't Ask in",
-            "We discuss [Tell, Don't Ask]{.emph} in",
-        )
-        # Add more test cases as needed
-    ],
-)
-def test_refine_match_adjusting_length(hay, needle, expected):
-    result = refine_matching_sequences(hay, needle)  # TODO: Change func
+    result = refine_matching(hay, needle)
     assert result == expected

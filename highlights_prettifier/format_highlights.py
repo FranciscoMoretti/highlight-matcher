@@ -3,7 +3,7 @@ from typing import List
 
 from markdown_it.tree import SyntaxTreeNode
 
-from highlights_prettifier.highlight_finder import (
+from highlights_prettifier.fuzzy_find_substrings_sequence import (
     fuzzy_find_substrings_sequence,
 )
 from highlights_prettifier.markdown_parser import MarkdownParser

@@ -1,28 +1,18 @@
 from typing import List
 from uu import Error
 
-from nltk.util import everygrams
-from rapidfuzz import fuzz, process
+from rapidfuzz import fuzz
+from highlights_prettifier.refine_matching import refine_matching
+from highlights_prettifier.default_tuning import (
+    FUZZY_APROXIMATION_MIN_SCORE,
+    FUZZY_MATCH_MIN_SCORE,
+)
 
 from highlights_prettifier.range import (
     Range,
     extend_substring_range,
     substring_by_range,
 )
-
-FUZZY_MATCH_MIN_SCORE = 90
-FUZZY_APROXIMATION_MIN_SCORE = 85
-
-
-def tokenize_from_text(text):
-    # Tokenize the input string into words (tokens)
-    # TODO: This operation is not safe for multiple whitespaces because it doesn't count
-    # them and then it joins them with a single whitespace
-    return text.split()
-
-
-def untokenize_to_text(tokens):
-    return " ".join(tokens)
 
 
 SEARCH_WINDOW_FACTOR = 2
@@ -50,7 +40,7 @@ def fuzzy_find_substrings_sequence(
         refinement_search_range = _get_search_range_around_alignment(
             long_string, first_alignment_range
         )
-        refined_match_string = extract_refined_match(
+        refined_match_string = refine_matching(
             hay=substring_by_range(long_string, refinement_search_range), needle=needle
         )
         if not refined_match_string:
@@ -68,17 +58,6 @@ def fuzzy_find_substrings_sequence(
             yield alignment_range
 
             current_start = alignment_range.end_pos
-
-
-def extract_refined_match(
-    hay,
-    needle,
-):
-    # TODO: Find the max ratio of both algorithms
-    refined_match_string = refine_matching_tokens(hay, needle)
-    if not refined_match_string:
-        refined_match_string = refine_matching_sequences(hay, needle)
-    return refined_match_string
 
 
 def _get_full_alignment_range(string, substring):
@@ -166,35 +145,3 @@ def _get_search_range_around_alignment(
         ),
     )
     return extended_range
-
-
-def refine_matching_tokens(current_hay, substring):
-    needle_tokens = tokenize_from_text(substring)
-    hay_tokens = tokenize_from_text(current_hay)
-    max_sim_string = ""
-
-    # TODO: Improve it by using relative bloats
-    hay_candidates = [
-        untokenize_to_text(ngram)
-        for ngram in everygrams(
-            hay_tokens,
-            min_len=min(len(needle_tokens) - 2, len(hay_tokens)),
-            max_len=max(len(needle_tokens) + 5, len(hay_tokens)),
-        )
-    ]
-
-    best_match = process.extractOne(substring, hay_candidates, scorer=fuzz.ratio)
-
-    if best_match and best_match[1] > FUZZY_MATCH_MIN_SCORE:
-        max_sim_string = best_match[0]
-    if not max_sim_string:
-        best_matches = process.extract(
-            substring, hay_candidates, scorer=fuzz.ratio, limit=3
-        )
-        print(f"Couldn't match the following {[current_hay, substring]}")
-        print(f"Best matches: {best_matches}")
-    return max_sim_string
-
-
-# def preprocess(seq):
-#     return utils.default_process(str(seq))
