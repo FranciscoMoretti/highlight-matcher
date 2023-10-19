@@ -1,6 +1,5 @@
 from typing import List
 from uu import Error
-import difflib
 
 from nltk.util import everygrams
 from rapidfuzz import fuzz, process
@@ -199,19 +198,3 @@ def refine_matching_tokens(current_hay, substring):
 
 # def preprocess(seq):
 #     return utils.default_process(str(seq))
-
-
-def refine_matching_sequences(hay, needle):
-    # Tokenize the input strings
-    matcher = difflib.SequenceMatcher(None, hay, needle)
-    match_ranges_raw = matcher.get_matching_blocks()
-    match_ranges = match_ranges_raw[:-1]  # Remove dummy last triple
-
-    if len(match_ranges) == 0:
-        return ""
-
-    hay_end = match_ranges[-1].a + match_ranges[-1].size
-    hay_start = match_ranges[0].a
-    result = hay[hay_start:hay_end]
-
-    return result
