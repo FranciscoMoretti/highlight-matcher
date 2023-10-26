@@ -107,6 +107,11 @@ def test_tokenization():
             "We We We discuss Tell, Don't Ask in o o o",
             "We discuss Tell, Don't Ask in",
             "We discuss Tell, Don't Ask in",
+        ),
+        (
+            "We We We discuss Tell, Don't Ask . in o o o",
+            "We discuss Tell, Don't Ask .",
+            "We discuss Tell, Don't Ask .",
         )
         # Add more test cases as needed
     ],
