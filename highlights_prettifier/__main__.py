@@ -14,7 +14,7 @@ def save_to_file(markdown, output_file):
         f.write(markdown)
 
 
-FILES_DIR = "data/PragmaticProgrammer"
+FILES_DIR = "data/PrinciplesOfPackageDesign"
 
 
 if __name__ == "__main__":
@@ -50,6 +50,7 @@ if __name__ == "__main__":
 
     with open(article_md_file_path, "r", encoding="utf-8") as file:
         article_text = file.read()
+        # TODO Use only one unicode library
         normalized_article_text = unicodedata.normalize("NFKD", article_text).replace(
             "\u200b", ""
         )
