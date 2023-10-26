@@ -6,7 +6,7 @@
     "configurations": [
 
         {
-            "name": "Python: Current File",
+            "name": "Python: highlights prettifier",
             "type": "python",
             "request": "launch",
             "program": "highlights_prettifier/__main__.py",

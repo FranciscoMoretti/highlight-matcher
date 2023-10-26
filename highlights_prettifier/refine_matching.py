@@ -34,8 +34,10 @@ def refine_matching(hay, needle):
 
     best_match = process.extractOne(needle, hay_candidates, scorer=fuzz.ratio)
 
-    if best_match and best_match[1] > FUZZY_MATCH_MIN_SCORE:
-        max_sim_string = best_match[0]
+    if best_match:
+        match_string, match_score, _ = best_match
+        if match_score > FUZZY_MATCH_MIN_SCORE:
+            max_sim_string = match_string
     if not max_sim_string:
         best_matches = process.extract(
             needle, hay_candidates, scorer=fuzz.ratio, limit=3
