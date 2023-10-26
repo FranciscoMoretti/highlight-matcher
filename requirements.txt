@@ -2,3 +2,5 @@ nltk
 thefuzz
 markdown-it-py
 linkify_it_py
+pypandoc==1.12
+pypandoc-binary==1.12
