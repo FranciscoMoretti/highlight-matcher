@@ -11,6 +11,16 @@ def remove_location_links(highlights):
     return cleaned_highlights
 
 
+def remove_view_highlight_links(highlights):
+    # Define a regex pattern to match the location links at the end of a string
+    pattern = r"\s*\(\[View Highlight\]\(.*?\)\)"
+
+    # Use re.sub to remove the location links from each highlight
+    cleaned_highlights = [re.sub(pattern, "", highlight) for highlight in highlights]
+
+    return cleaned_highlights
+
+
 def remove_trailing_newlines(highlights):
     # Define a regex pattern to match trailing newline characters
     pattern = r"\n+$"
@@ -30,6 +40,7 @@ def extract_text_highlights(input_text):
 
     # Remove the location links and leading/trailing whitespace from each match
     highlights = remove_location_links(highlights)
+    highlights = remove_view_highlight_links(highlights)
     highlights = remove_trailing_newlines(highlights)
 
     return highlights

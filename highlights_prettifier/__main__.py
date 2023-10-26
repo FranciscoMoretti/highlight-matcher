@@ -14,7 +14,7 @@ def save_to_file(markdown, output_file):
         f.write(markdown)
 
 
-FILES_DIR = "data/PrinciplesOfPackageDesign"
+FILES_DIR = "data/PragmaticProgrammer"
 
 
 if __name__ == "__main__":
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     input_text = ""
     article_text = ""
 
-    # TODO: Extract and infer titles from table of contents
+    # TODO: Extract and infer titles from table of contents or explore pandoc metadata
     # book = epub.read_epub(article_epub_file_path)
     with open(highlights_file, "r", encoding="utf-8") as file:
         input_text = file.read()
