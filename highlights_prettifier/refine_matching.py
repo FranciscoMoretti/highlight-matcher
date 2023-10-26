@@ -40,7 +40,7 @@ def refine_matching(hay, needle):
 
     if best_match:
         match_string, match_score, _ = best_match
-        if match_score < 95:
+        if match_score < 100:
             if not needle.endswith("..."):
                 print(f"Score {match_score}")
         if match_score > FUZZY_MATCH_MIN_SCORE:
