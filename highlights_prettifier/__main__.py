@@ -27,13 +27,14 @@ if __name__ == "__main__":
     input_text = ""
     article_text = ""
 
-    # TODO: Extract and infer titles from table of contents or explore pandoc metadata
+    # TODO: Extract and infer titles from table of contents
+    # TODO: explore pandoc metadata for titles
     # book = epub.read_epub(article_epub_file_path)
     with open(highlights_file, "r", encoding="utf-8") as file:
         input_text = file.read()
-        normalized_highlights_text = unicodedata.normalize("NFKD", input_text).replace(
-            "\u200b", ""
-        )
+        normalized_highlights_text = unicodedata.normalize(
+            "NFKD", input_text
+        ).replace("\u200b", "")
     if not Path(article_md_file_path).exists():
         if Path(article_epub_file_path).exists():
             output = pypandoc.convert_file(
@@ -44,16 +45,17 @@ if __name__ == "__main__":
             )
         else:
             print(
-                f"Article file doesn't exist at provided path {article_epub_file_path}"
+                "Article file doesn't exist at provided path "
+                f"{article_epub_file_path}"
             )
             sys.exit()
 
     with open(article_md_file_path, "r", encoding="utf-8") as file:
         article_text = file.read()
         # TODO Use only one unicode library
-        normalized_article_text = unicodedata.normalize("NFKD", article_text).replace(
-            "\u200b", ""
-        )
+        normalized_article_text = unicodedata.normalize(
+            "NFKD", article_text
+        ).replace("\u200b", "")
 
     highlights = get_highlights_from_raw_text(normalized_highlights_text)
     formatted_highlights_html = create_formated_highlights(
