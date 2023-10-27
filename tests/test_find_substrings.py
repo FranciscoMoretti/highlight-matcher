@@ -11,7 +11,9 @@ def test_find_substring_positions():
     long_string = "This is a long string with some substrings."
     expected_substrings = ["long", "with", "substrings."]
     positions = list(
-        fuzzy_find_substrings_sequence(long_string, expected_substrings, min_chars=4)
+        fuzzy_find_substrings_sequence(
+            long_string, expected_substrings, min_chars=4
+        )
     )
     found_substrings = [
         substring_by_range(long_string, sub_range) for sub_range in positions
@@ -31,8 +33,12 @@ def test_no_match():
 def test_fuzzy_find_exact_match():
     long_string = "This is an example of fuzzy matching in Python."
     substrings = ["example  of", "fuzzy matching  in  Python."]
-    result_ranges = list(fuzzy_find_substrings_sequence(long_string, substrings))
-    result_string = [substring_by_range(long_string, range) for range in result_ranges]
+    result_ranges = list(
+        fuzzy_find_substrings_sequence(long_string, substrings)
+    )
+    result_string = [
+        substring_by_range(long_string, range) for range in result_ranges
+    ]
     expected = ["example of", "fuzzy matching in Python."]
     assert result_string == expected
 
@@ -64,8 +70,12 @@ expected_result_strings = [
     ],
 )
 def test_fuzzy_find_partial_match(long_string, substrings, expected):
-    result_ranges = list(fuzzy_find_substrings_sequence(long_string, substrings))
-    result_string = [substring_by_range(long_string, range) for range in result_ranges]
+    result_ranges = list(
+        fuzzy_find_substrings_sequence(long_string, substrings)
+    )
+    result_string = [
+        substring_by_range(long_string, range) for range in result_ranges
+    ]
     assert result_string == expected
 
 

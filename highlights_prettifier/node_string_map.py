@@ -46,6 +46,7 @@ class NodeStringMap:
             if node.type in ["text", "softbreak", "hardbreak"]:
                 self.links.append(
                     NodeStringLink(
-                        node=node, range=Range(start_pos=start_index, end_pos=end_index)
+                        node=node,
+                        range=Range(start_pos=start_index, end_pos=end_index),
                     )
                 )

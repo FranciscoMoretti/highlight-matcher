@@ -41,11 +41,14 @@ def fuzzy_find_substrings_sequence(
             long_string, first_alignment_range
         )
         refined_match_string = refine_matching(
-            hay=substring_by_range(long_string, refinement_search_range), needle=needle
+            hay=substring_by_range(long_string, refinement_search_range),
+            needle=needle,
         )
         if not refined_match_string:
             if raise_errors:
-                raise Error("Match Refinement Failed but basic alignment worked")
+                raise Error(
+                    "Match Refinement Failed but basic alignment worked"
+                )
             else:
                 continue
         # Rematch to find the index with the string extracted from current hay
@@ -54,7 +57,9 @@ def fuzzy_find_substrings_sequence(
             substring=refined_match_string,
         )
         if alignment_range is not None:
-            alignment_range = alignment_range.offset(refinement_search_range.start_pos)
+            alignment_range = alignment_range.offset(
+                refinement_search_range.start_pos
+            )
             yield alignment_range
 
             current_start = alignment_range.end_pos
@@ -89,7 +94,9 @@ def _find_first_alignment_range(long_string, substring, current_start=0):
             search_range=search_range,
             score_cutoff=FUZZY_APROXIMATION_MIN_SCORE,
         )
-        if partial_alignment_range is None and search_range.end_pos == len(long_string):
+        if partial_alignment_range is None and search_range.end_pos == len(
+            long_string
+        ):
             # Reached the end without finding, try being more permisive
             partial_alignment_range = _get_alignment_range_in_search_range(
                 hay=substring_by_range(long_string, search_range),

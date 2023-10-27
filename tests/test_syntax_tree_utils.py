@@ -33,5 +33,7 @@ def test_filter_syntax_tree():
     filter_syntax_tree(syntax_tree, descendant_has_text)
 
     # Ensure that the filtered syntax tree contains only heading nodes
-    resulting_markdown = MDRenderer().render(syntax_tree.to_tokens(), mdit.options, env)
+    resulting_markdown = MDRenderer().render(
+        syntax_tree.to_tokens(), mdit.options, env
+    )
     assert resulting_markdown == "### Header 2\n"

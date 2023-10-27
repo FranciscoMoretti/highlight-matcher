@@ -1,4 +1,8 @@
-from highlights_prettifier.range import Range, calculate_overlap, extend_substring_range
+from highlights_prettifier.range import (
+    Range,
+    calculate_overlap,
+    extend_substring_range,
+)
 
 
 def test_no_overlap():
@@ -36,7 +40,9 @@ def test_extend_substring_within_bounds():
         complete_string_len, substring_range, extension_length=5
     )
 
-    assert extended_range == Range(7, 20)  # Expected extended range within bounds
+    assert extended_range == Range(
+        7, 20
+    )  # Expected extended range within bounds
 
 
 def test_extend_substring_to_boundary():

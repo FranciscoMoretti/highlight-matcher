@@ -1,4 +1,7 @@
-from highlights_prettifier.syntax_tree_utils import filter_syntax_tree, walk_up_find
+from highlights_prettifier.syntax_tree_utils import (
+    filter_syntax_tree,
+    walk_up_find,
+)
 from mdformat.renderer import MDRenderer
 from markdown_it import MarkdownIt
 from rapidfuzz import fuzz, process
@@ -76,7 +79,9 @@ def test_find_highlight_and_titles(
             return True
         elif node.type == "text":
             match = process.extractOne(
-                query=node.content, choices=highlights, scorer=fuzz.partial_ratio
+                query=node.content,
+                choices=highlights,
+                scorer=fuzz.partial_ratio,
             )
             return match and match[1] > FUZZY_MATCH_MIN_SCORE
         return False
@@ -97,5 +102,7 @@ def test_find_highlight_and_titles(
     filter_syntax_tree(syntax_tree, descendant_has_text_or_is_heading)
 
     # Ensure that the filtered syntax tree contains only heading nodes
-    resulting_markdown = MDRenderer().render(syntax_tree.to_tokens(), mdit.options, env)
+    resulting_markdown = MDRenderer().render(
+        syntax_tree.to_tokens(), mdit.options, env
+    )
     assert resulting_markdown == expected_resulting_markdown

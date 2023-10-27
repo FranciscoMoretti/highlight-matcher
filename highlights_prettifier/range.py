@@ -41,6 +41,8 @@ def extend_substring_range(
     complete_string_len: int, substring_range: Range, extension_length: int = 10
 ):
     start_pos = max(substring_range.start_pos - extension_length, 0)
-    end_pos = min(substring_range.end_pos + extension_length, complete_string_len)
+    end_pos = min(
+        substring_range.end_pos + extension_length, complete_string_len
+    )
 
     return Range(start_pos, end_pos)

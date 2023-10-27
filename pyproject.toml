@@ -6,3 +6,6 @@ exclude = "docs"
 
 [tool.pytest]
 addopts = '--ignore=setup.py'
+
+[tool.black]
+line-length = 80

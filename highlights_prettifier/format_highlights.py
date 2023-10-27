@@ -22,7 +22,10 @@ def filter_node_string_links(
     node_links: List[NodeStringLink], filter_ranges: List[Range]
 ) -> List[NodeStringLink]:
     filtered_list = []
-    node_idx, range_idx = 0, 0  # Index variables for node_links and filter_ranges
+    node_idx, range_idx = (
+        0,
+        0,
+    )  # Index variables for node_links and filter_ranges
 
     while node_idx < len(node_links) and range_idx < len(filter_ranges):
         node_link = node_links[node_idx]
@@ -39,7 +42,9 @@ def filter_node_string_links(
             overlap_range = calculate_overlap(node_link.range, filter_range)
             _filter_node_text_with_range(node_link, overlap_range)
             filtered_list.append(node_link)
-            node_idx += 1  # Move to the next node_link, as ranges do not overlap
+            node_idx += (
+                1  # Move to the next node_link, as ranges do not overlap
+            )
 
     return filtered_list
 

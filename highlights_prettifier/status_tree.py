@@ -37,7 +37,9 @@ class StatusTree:
     root_node: SyntaxTreeNode
 
     def update_status(
-        self, should_update: Callable[[SyntaxTreeNode], bool], new_status: Status
+        self,
+        should_update: Callable[[SyntaxTreeNode], bool],
+        new_status: Status,
     ) -> int:
         num_updated = 0
         for node in self.root_node.walk():
@@ -61,7 +63,8 @@ class StatusTree:
         nodes_no_children = list(
             filter(
                 lambda node: (
-                    get_node_status(node) != Status.ENABLED and len(node.children) == 0
+                    get_node_status(node) != Status.ENABLED
+                    and len(node.children) == 0
                 ),
                 self.root_node.walk(),
             )

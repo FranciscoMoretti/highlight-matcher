@@ -34,7 +34,9 @@ def extract_clippings(file_path) -> List[Clipping]:
                 r"^(?:- Your Highlight on page (\d+) \| )?location (\d+)-\d+ \| Added on (.+)$",
                 meta_info,
             )
-            page, location, date = match.groups() if match else (None, None, None)
+            page, location, date = (
+                match.groups() if match else (None, None, None)
+            )
 
             # Extract the highlighted text
             text = "\n".join(lines[2:])
@@ -60,6 +62,10 @@ books = list(set(clipping.book_title for clipping in clippings))
 for book_title in books:
     print(book_title)
 
-book_clippings = [clipping for clipping in clippings if clipping.book_title == book]
+book_clippings = [
+    clipping for clipping in clippings if clipping.book_title == book
+]
 
-save_clippings_to_file(clippings=book_clippings, output_file="data/book_clippings.txt")
+save_clippings_to_file(
+    clippings=book_clippings, output_file="data/book_clippings.txt"
+)

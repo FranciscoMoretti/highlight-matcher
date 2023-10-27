@@ -6,7 +6,9 @@ def remove_location_links(highlights):
     pattern = r"\s*\(\[Location\s+\d+\]\(.*?\)\)"
 
     # Use re.sub to remove the location links from each highlight
-    cleaned_highlights = [re.sub(pattern, "", highlight) for highlight in highlights]
+    cleaned_highlights = [
+        re.sub(pattern, "", highlight) for highlight in highlights
+    ]
 
     return cleaned_highlights
 
@@ -16,7 +18,9 @@ def remove_view_highlight_links(highlights):
     pattern = r"\s*\(\[View Highlight\]\(.*?\)\)"
 
     # Use re.sub to remove the location links from each highlight
-    cleaned_highlights = [re.sub(pattern, "", highlight) for highlight in highlights]
+    cleaned_highlights = [
+        re.sub(pattern, "", highlight) for highlight in highlights
+    ]
 
     return cleaned_highlights
 
@@ -26,7 +30,9 @@ def remove_trailing_newlines(highlights):
     pattern = r"\n+$"
 
     # Use re.sub to remove trailing newlines from each highlight
-    cleaned_highlights = [re.sub(pattern, "", highlight) for highlight in highlights]
+    cleaned_highlights = [
+        re.sub(pattern, "", highlight) for highlight in highlights
+    ]
 
     return cleaned_highlights
 

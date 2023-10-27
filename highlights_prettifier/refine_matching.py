@@ -35,7 +35,11 @@ def refine_matching(hay, needle):
     ]
 
     best_match = process.extractOne(
-        needle, hay_candidates, scorer=fuzz.ratio, processor=preprocess, score_hint=98
+        needle,
+        hay_candidates,
+        scorer=fuzz.ratio,
+        processor=preprocess,
+        score_hint=98,
     )
 
     if best_match:
