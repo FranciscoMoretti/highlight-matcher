@@ -1,6 +1,8 @@
 """Main module."""
 import sys
 import unicodedata
+from bs4 import BeautifulSoup
+from highlights_prettifier.fix_titles import fix_titles
 from highlights_prettifier.format_highlights import create_formated_highlights
 from highlights_prettifier.parse_highlights import get_highlights_from_raw_text
 from pathlib import Path
@@ -28,9 +30,6 @@ if __name__ == "__main__":
     input_text = ""
     article_text = ""
 
-    # TODO: Extract and infer titles from table of contents
-    book = epub.read_epub(article_epub_file_path)
-
     # Convert epub to html
     if not Path(article_html_file_path).exists():
         if Path(article_epub_file_path).exists():
@@ -46,6 +45,20 @@ if __name__ == "__main__":
                 f"{article_epub_file_path}"
             )
             sys.exit()
+
+    with open(article_html_file_path) as fp:
+        soup = BeautifulSoup(fp, "html.parser")
+    if not soup:
+        print(
+            "Article file doesn't exist at provided path "
+            f"{article_html_file_path}"
+        )
+        sys.exit()
+
+    # TODO: Extract and infer titles from table of contents
+    book = epub.read_epub(article_epub_file_path)
+    fixed_soup = fix_titles(book, soup)
+    # TODO: Save soup to file
 
     # Convert html to MD
     if not Path(article_md_file_path).exists():
