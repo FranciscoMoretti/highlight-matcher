@@ -4,6 +4,20 @@ import re
 from highlights_prettifier.clipping import Clipping
 
 
+# TODO Dedup clippings by comparing ranges
+# Example
+# The Pragmatic Programmer: your journey to mastery, 20th Anniversary Edition, 2nd Edition (David Thomas;Andrew Hunt)
+# - Your Highlight on page 307 | location 4696-4699 | Added on Saturday, 21 October 2023 22:20:48
+
+# We're hoping to find activities that take time, but not time in our code. Querying a database, accessing an external service, waiting for user input: all these things would normally stall our program until they complete. And these are all opportunities to do something more productive than the CPU equivalent of twiddling one's thumbs.
+# ==========
+# The Pragmatic Programmer: your journey to mastery, 20th Anniversary Edition, 2nd Edition (David Thomas;Andrew Hunt)
+# - Your Highlight on page 307 | location 4696-4698 | Added on Saturday, 21 October 2023 22:20:54
+
+# We're hoping to find activities that take time, but not time in our code. Querying a database, accessing an external service, waiting for user input: all these things would normally stall our program until they complete.
+# ==========
+
+
 def save_clippings_to_file(clippings, output_file):
     with open(output_file, "w", encoding="utf-8") as file:
         for clipping in clippings:
