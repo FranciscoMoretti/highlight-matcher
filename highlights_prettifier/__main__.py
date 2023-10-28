@@ -22,6 +22,7 @@ FILES_DIR = "data/PragmaticProgrammer"
 if __name__ == "__main__":
     article_epub_file_path = FILES_DIR + "/article.epub"
     article_html_file_path = FILES_DIR + "/article.html"
+    article_fixed_html_file_path = FILES_DIR + "/article_fixed.html"
     article_md_file_path = FILES_DIR + "/article.md"
     output_html_file = FILES_DIR + "/output.html"
     highlights_file = FILES_DIR + "/highlights.md"
@@ -58,13 +59,16 @@ if __name__ == "__main__":
     # TODO: Extract and infer titles from table of contents
     book = epub.read_epub(article_epub_file_path)
     fixed_soup = fix_titles(book, soup)
-    # TODO: Save soup to file
+
+    # TODO skip if path exists
+    with open(article_fixed_html_file_path, "w") as file:
+        file.write(str(fixed_soup))
 
     # Convert html to MD
     if not Path(article_md_file_path).exists():
-        if Path(article_html_file_path).exists():
+        if Path(article_fixed_html_file_path).exists():
             output = pypandoc.convert_file(
-                source_file=article_html_file_path,
+                source_file=article_fixed_html_file_path,
                 format="html",
                 outputfile=article_md_file_path,
                 to="gfm",
