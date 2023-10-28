@@ -4,8 +4,8 @@ from rapidfuzz import fuzz, process
 from nltk.util import everygrams
 
 from highlights_prettifier.default_tuning import FUZZY_MATCH_MIN_SCORE
-from unidecode import unidecode
-import re
+
+from highlights_prettifier.preprocess import default_preprocess
 
 
 def tokenize_from_text(text):
@@ -38,7 +38,7 @@ def refine_matching(hay, needle):
         needle,
         hay_candidates,
         scorer=fuzz.ratio,
-        processor=preprocess,
+        processor=default_preprocess,
         score_hint=98,
     )
 
@@ -56,19 +56,3 @@ def refine_matching(hay, needle):
         print(f"Couldn't match the following {[hay, needle]}")
         print(f"Best matches: {best_matches}")
     return max_sim_string
-
-
-def preprocess(seq):
-    """
-    normalized_1:
-        convert all characters to lower case
-    normalized_2:
-        remove multiple whitespace characters (space, tab, newline, return, formfeed)
-    unicode:
-        convert unicode to ascii
-    TODO: removing all non alphanumeric characters ?
-    TODO: trimming whitespaces ?
-    """
-    normalized_1 = str(seq).lower()
-    normalized_2 = re.sub("\s{2,}", " ", normalized_1)
-    return unidecode(normalized_2)
