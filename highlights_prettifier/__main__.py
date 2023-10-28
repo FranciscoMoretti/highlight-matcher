@@ -1,14 +1,15 @@
 """Main module."""
 import sys
 import unicodedata
+from pathlib import Path
+
+import pypandoc
 from bs4 import BeautifulSoup
+from ebooklib import epub
+
 from highlights_prettifier.fix_titles import fix_titles
 from highlights_prettifier.format_highlights import create_formated_highlights
 from highlights_prettifier.parse_highlights import get_highlights_from_raw_text
-from pathlib import Path
-import pypandoc
-
-from ebooklib import epub
 
 
 def save_to_file(markdown, output_file):
