@@ -28,9 +28,11 @@ def fix_titles(book, soup: bs4.BeautifulSoup) -> bs4.BeautifulSoup:
     missing_toc_titles, extra_html_titles = get_not_matching_titles(
         toc_titles=bfs_toc_titles, html_titles=bfs_html_titles
     )
-    # TODO Complete function by adding nmissing titles
+    fixed_soup = add_missing_toc_titles(
+        toc_titles=missing_toc_titles, soup=soup
+    )
 
-    return soup
+    return fixed_soup
 
 
 def dfs_tree_to_list(tree, level=0) -> List[TocTitle]:
@@ -142,26 +144,96 @@ def get_not_matching_titles(
         not_matching_html_titles.append(html_titles[html_idx])
         html_idx += 1
 
-    # TODO Continue debugging
     return not_matching_toc_titles, not_matching_html_titles
 
 
 def add_missing_toc_titles(toc_titles, soup):
     for toc_title in toc_titles:
-        html_titles = soup.findAll(id=toc_title.element.href)
-        if not html_titles:
-            if "#" in toc_title.element.href:
-                main_ref = toc_title.element.href.split("#")[0]
-                html_titles_loose = soup.findAll(id=main_ref)
-                print(html_titles_loose)
-                new_tag = soup.new_tag(f"h{toc_title.level}")
-                new_tag.string = toc_title.element.title
-                html_titles_loose[0].append(new_tag)
-        elif len(html_titles) > 1:
-            # TODO handle duplicated IDs
-            print("titles with duplicated ids: " f"{html_titles}")
-            sys.exit()
-        print(html_titles)
+        new_tag = _crate_title_tag(soup, toc_title)
+
+        html_title = soup.find(id=toc_title.element.href)
+        if not html_title:
+            partial_href_match = find_partial_href_match(
+                soup, toc_title.element.href
+            )
+            tag_text_match = find_tag_text_match(
+                element=partial_href_match, text=toc_title.element.title
+            )
+            # TODO Insert in the right place with an insertion algorithm
+            tag_text_match.insert_after(new_tag)
+        else:
+            html_title.insert_after(new_tag)
+
+    return soup
+
+
+def _crate_title_tag(soup, toc_title):
+    new_tag = soup.new_tag(name=f"h{toc_title.level}")
+    new_tag.string = toc_title.element.title
+    return new_tag
+
+
+def find_partial_href_match(soup, href):
+    if "#" in href:
+        main_ref = href.split("#")[0]
+        html_titles_loose = soup.find(id=main_ref)
+        return html_titles_loose
+
+
+def find_tag_text_match(element: bs4.element.Tag, text: str):
+    if tag_matches_text(element, text):
+        return element
+
+    # Check next siblings and their childs
+    for sibling in element.find_next_siblings():
+        sibling_child_match = sibling.find(
+            lambda tag: tag_matches_text(tag, text), recursive=True
+        )
+        if sibling_child_match:
+            return sibling_child_match
+
+    # Check parent and its siblings recursively
+    parent = element.find_parent()
+    if parent:
+        # Recurse
+        return find_tag_text_match(parent, text)
+    # End condition
+    return None
+
+
+def tag_matches_text(tag: bs4.element.Tag, needle_text: str):
+    hay_text = tag.get_text()
+    result = (
+        len(hay_text) > len(needle_text)
+        # TODO Consider doing only ratio
+        and fuzz.ratio(
+            hay_text,
+            needle_text,
+            score_cutoff=90,
+            processor=default_preprocess,
+        )
+    )
+    return result
+
+
+def find_text_match(element: bs4.element.Tag, text: str, matching_function):
+    if matching_function(element, text):
+        return element
+
+    # Check next siblings
+    for sibling in element.find_next_siblings():
+        if matching_function(sibling, text):
+            return sibling
+
+    # Check parent and its siblings recursively
+    parent = element.find_parent()
+    while parent:
+        for sibling in parent.find_next_siblings():
+            if matching_function(sibling, text):
+                return sibling
+        parent = parent.find_parent()
+
+    return None
 
 
 # Define a function to extract heading levels
